@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latestMajor</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="libs\**" />
+    <EmbeddedResource Remove="libs\**" />
+    <None Remove="libs\**" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <PackageReference Include="BepInEx.Analyzers" Version="1.0.*">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="BepInEx.Core" Version="5.4.21" />
+    <PackageReference Include="R2API" Version="5.0.5" />
+    <PackageReference Include="R2API.ContentManagement" Version="1.0.5" />
+    <PackageReference Include="R2API.Core" Version="5.1.1" />
+    <PackageReference Include="R2API.DamageType" Version="1.1.1" />
+    <PackageReference Include="R2API.Director" Version="2.1.3" />
+    <PackageReference Include="R2API.Elites" Version="1.0.4" />
+    <PackageReference Include="R2API.Prefab" Version="1.0.4" />
+    <PackageReference Include="R2API.RecalculateStats" Version="1.4.0" />
+    <PackageReference Include="R2API.Sound" Version="1.0.3" />
+    <PackageReference Include="RiskOfRain2.GameLibs" Version="1.3.1.275-r.0" />
+    <PackageReference Include="Rune580.Mods.RiskOfRain2.RiskOfOptions" Version="2.8.0" />
+  </ItemGroup>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Exec Command="copy /Y &quot;$(TargetDir)$(TargetName).dll&quot; &quot;$(SolutionDir)Release\$(TargetName).dll&quot;&#xD;&#xA;if exist $(SolutionDir)Release\Release.zip ( Del $(SolutionDir)Release\Release.zip)&#xD;&#xA;powershell Compress-Archive -Path '$(SolutionDir)Release\*.*' -DestinationPath '$(SolutionDir)Release\Release.zip' -Force" />
+	</Target>
+
+</Project>
