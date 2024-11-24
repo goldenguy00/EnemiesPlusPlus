@@ -24,6 +24,7 @@ namespace EnemiesPlus.Content.Imp
             impVoidSpikes = PrefabAPI.InstantiateClone(Addressables.LoadAssetAsync<GameObject>("RoR2/Base/ImpBoss/ImpVoidspikeProjectile.prefab").WaitForCompletion(), "ImpVoidSpikeProjectileScore");
             impVoidSpikes.GetComponent<ProjectileImpactExplosion>().destroyOnWorld = true;
             ContentAddition.AddProjectile(impVoidSpikes);
+            ImpVoidSpike.projectilePrefab = impVoidSpikes;
 
             CreateSpikeSkillFamily();
 
@@ -53,9 +54,9 @@ namespace EnemiesPlus.Content.Imp
 
             impSpikes.activationState = ContentAddition.AddEntityState<ImpVoidSpike>(out _);
             impSpikes.activationStateMachineName = "Weapon";
-            impSpikes.interruptPriority = InterruptPriority.Death;
+            impSpikes.interruptPriority = InterruptPriority.Pain;
 
-            impSpikes.baseMaxStock = 2;
+            impSpikes.baseMaxStock = 1;
             impSpikes.baseRechargeInterval = 5f;
 
             impSpikes.rechargeStock = 1;

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Security;
 using System.Security.Permissions;
 using BepInEx;
@@ -9,7 +10,7 @@ using EnemiesPlus.Content.Lemur;
 using EnemiesPlus.Content.Lunar;
 using EnemiesPlus.Content.Wisp;
 using EnemiesPlus.Content.Worm;
-using EnemiesPlus.Prediction;
+using RoR2;
 
 [module: UnverifiableCode]
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -26,11 +27,14 @@ namespace EnemiesPlus
         public const string PluginGUID = $"com.{PluginAuthor}.{PluginName}";
         public const string PluginAuthor = "score";
         public const string PluginName = "EnemiesPlusPlus";
-        public const string PluginVersion = "1.0.0";
+        public const string PluginVersion = "1.0.3";
 
         public static EnemiesPlusPlugin Instance { get; private set; }
 
         public static bool RooInstalled => Chainloader.PluginInfos.ContainsKey("com.rune580.riskofoptions");
+        public static bool InfernoInstalled => Chainloader.PluginInfos.ContainsKey("HIFU.Inferno");
+        public static bool RiskyArtifactsInstalled => Chainloader.PluginInfos.ContainsKey("com.Moffein.RiskyArtifacts");
+        public static bool LeagueOfLiteralGays => Chainloader.PluginInfos.ContainsKey("com.phreel.TitansOfTheRiftSOTV");
 
         public void Awake()
         {
@@ -38,13 +42,13 @@ namespace EnemiesPlus
 
             Log.Init(Logger);
             EnemiesPlusConfig.Init(Config);
-            PredictionHooks.Init();
+            HarmonyHooks.Init();
 
             if (EnemiesPlusConfig.enableSkills.Value)
             {
                 if (EnemiesPlusConfig.bellSkills.Value) BellChanges.Init();
                 if (EnemiesPlusConfig.impSkills.Value) ImpChanges.Init();
-                if (EnemiesPlusConfig.wormSkills.Value) WormChanges.Init();
+                if (EnemiesPlusConfig.wormLeap.Value || EnemiesPlusConfig.wormTracking.Value) WormChanges.Init();
                 if (EnemiesPlusConfig.lunarGolemSkills.Value) LunarChanges.Init();
             }
 
@@ -57,6 +61,37 @@ namespace EnemiesPlus
 
             if (EnemiesPlusConfig.enableBeetleFamilyChanges.Value)
                 BeetleChanges.Init();
+        }
+
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        private static float GetRiskyArtifactsWarfareProjectileSpeedMult()
+        {
+            if (RunArtifactManager.instance && RunArtifactManager.instance.IsArtifactEnabled(Risky_Artifacts.Artifacts.Warfare.artifact))
+            {
+                return Risky_Artifacts.Artifacts.Warfare.projSpeed;
+            }
+            return 1f;
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        private static float GetInfernoProjectileSpeedMult()
+        {
+            if (Run.instance && Run.instance.selectedDifficulty == Inferno.Main.InfernoDiffIndex)
+            {
+                return Inferno.Main.ProjectileSpeed.Value;
+            }
+            return 1f;
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public static void GetProjectileSpeedModifiers(ref float speed)
+        {
+            if (InfernoInstalled)
+                speed *= GetInfernoProjectileSpeedMult();
+
+            if (RiskyArtifactsInstalled)
+                speed *= GetRiskyArtifactsWarfareProjectileSpeedMult();
         }
     }
 }

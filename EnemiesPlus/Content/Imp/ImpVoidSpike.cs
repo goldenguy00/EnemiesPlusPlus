@@ -1,4 +1,3 @@
-using EnemiesPlus.Prediction;
 using EntityStates;
 using EntityStates.ImpMonster;
 using RoR2;
@@ -10,6 +9,7 @@ namespace EnemiesPlus.Content.Imp
 {
     public class ImpVoidSpike : BaseState
     {
+        public static GameObject projectilePrefab;
         private Animator modelAnimator;
         private float duration;
         private int slashCount;
@@ -37,7 +37,7 @@ namespace EnemiesPlus.Content.Imp
             base.OnExit();
         }
 
-        private void HandleSlash(string animatorParamName, string muzzleName)
+        public void HandleSlash(string animatorParamName, string muzzleName)
         {
             if (this.modelAnimator.GetFloat(animatorParamName) <= 0.1)
                 return;
@@ -45,8 +45,8 @@ namespace EnemiesPlus.Content.Imp
             Util.PlaySound(DoubleSlash.slashSoundString, this.gameObject);
             EffectManager.SimpleMuzzleFlash(DoubleSlash.swipeEffectPrefab, this.gameObject, muzzleName, true);
             this.slashCount++;
-            var aimRay = PredictionUtils.PredictAimray(this.GetAimRay(), this.characterBody, ImpChanges.impVoidSpikes);
-            ProjectileManager.instance.FireProjectile(ImpChanges.impVoidSpikes, aimRay.origin, Util.QuaternionSafeLookRotation(aimRay.direction), this.gameObject, this.damageStat, 0.0f, base.RollCrit());
+            var aimRay = this.GetAimRay();
+            ProjectileManager.instance.FireProjectile(projectilePrefab, aimRay.origin, Util.QuaternionSafeLookRotation(aimRay.direction), this.gameObject, this.damageStat, 0.0f, base.RollCrit());
         }
 
         public override void FixedUpdate()
@@ -71,7 +71,7 @@ namespace EnemiesPlus.Content.Imp
 
         public override InterruptPriority GetMinimumInterruptPriority()
         {
-            return InterruptPriority.PrioritySkill;
+            return InterruptPriority.Frozen;
         }
     }
 }

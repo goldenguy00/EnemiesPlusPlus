@@ -12,7 +12,6 @@ namespace EnemiesPlus.Content.Lemur
 
         private LemurChanges()
         {
-
             On.EntityStates.LemurianMonster.Bite.OnEnter += BiteLeap;
             LemBite.baseRechargeInterval = 1f;
         }

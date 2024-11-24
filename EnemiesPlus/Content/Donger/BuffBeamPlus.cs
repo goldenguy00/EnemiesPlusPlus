@@ -23,7 +23,6 @@ namespace EnemiesPlus.Content.Donger
             {
                 filterByLoS = false,
                 maxDistanceFilter = 50f,
-                maxAngleFilter = 180f,
                 searchOrigin = aimRay.origin,
                 searchDirection = aimRay.direction,
                 sortMode = BullseyeSearch.SortMode.Angle,
@@ -39,27 +38,25 @@ namespace EnemiesPlus.Content.Donger
             if (target)
             {
                 this.StartAimMode(BuffBeam.duration);
-                Debug.LogFormat("Buffing target {0}", target);
                 targetBody = target.healthComponent.body;
                 targetBody.AddBuff(RoR2Content.Buffs.ElephantArmorBoost.buffIndex);
             }
-
-            string childName = "Muzzle";
-            var modelTransform = GetModelTransform();
-            if (!modelTransform)
+            else
             {
-                return;
+                skillLocator.secondary.AddOneStock();
+                this.outer.SetNextStateToMain();
             }
 
-            var component = modelTransform.GetComponent<ChildLocator>();
-            if ((bool)component)
+            string childName = "Muzzle";
+            var childLoc = GetModelChildLocator();
+            if (childLoc)
             {
-                muzzleTransform = component.FindChild(childName);
+                muzzleTransform = childLoc.FindChild(childName);
                 buffBeamInstance = Object.Instantiate(buffBeamPrefab);
-                var component2 = buffBeamInstance.GetComponent<ChildLocator>();
-                if (component2)
+                var beamChildLoc = buffBeamInstance.GetComponent<ChildLocator>();
+                if (beamChildLoc)
                 {
-                    beamTipTransform = component2.FindChild("BeamTip");
+                    beamTipTransform = beamChildLoc.FindChild("BeamTip");
                 }
 
                 healBeamCurve = buffBeamInstance.GetComponentInChildren<BezierCurveLine>();

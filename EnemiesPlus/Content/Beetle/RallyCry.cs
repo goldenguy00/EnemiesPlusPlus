@@ -9,10 +9,9 @@ namespace EnemiesPlus.Content.Beetle
 {
     public class RallyCry : BaseState
     {
-        public float baseDuration = 3.5f;
-        public float buffDuration = 6f;
+        public static float baseDuration = 3.5f;
+        public static float buffDuration = 8f;
         private float delay;
-        private Animator modelAnimator;
         private float duration;
         private bool hasCastBuff;
         private BullseyeSearch bullseyeSearch;
@@ -20,28 +19,39 @@ namespace EnemiesPlus.Content.Beetle
         public override void OnEnter()
         {
             base.OnEnter();
-            this.duration = this.baseDuration / this.attackSpeedStat;
+            this.duration = baseDuration / this.attackSpeedStat;
             this.delay = this.duration * 0.5f;
-
-            var mask = TeamMask.none;
-            if (this.teamComponent)
-                mask.AddTeam(this.teamComponent.teamIndex);
 
             this.bullseyeSearch = new BullseyeSearch
             {
-                teamMaskFilter = mask,
+                teamMaskFilter = TeamMask.none,
                 filterByLoS = false,
-                maxDistanceFilter = 16f,
-                maxAngleFilter = 360f,
+                maxDistanceFilter = 24f,
                 sortMode = BullseyeSearch.SortMode.Distance,
                 filterByDistinctEntity = true,
-                viewer = this.characterBody
+                viewer = this.characterBody,
+                searchOrigin = this.transform.position,
+                searchDirection = this.transform.forward
             };
+            if (base.teamComponent)
+                bullseyeSearch.teamMaskFilter.AddTeam(base.teamComponent.teamIndex);
 
-
-            this.modelAnimator = this.GetModelAnimator();
-            if (!this.modelAnimator)
-                return;
+            this.characterBody.AddTimedBuff(RoR2Content.Buffs.ArmorBoost, buffDuration);
+            var ed = new EffectData()
+            {
+                origin = this.transform.position,
+                rotation = Quaternion.identity
+            };
+            var loc = this.GetModelChildLocator();
+            if (loc)
+            {
+                int childIndex = loc.FindChildIndex("Head");
+                if (childIndex != -1)
+                {
+                    ed.SetChildLocatorTransformReference(base.gameObject, childIndex);
+                }
+            }
+            EffectManager.SpawnEffect(DefenseUp.defenseUpPrefab, ed, true);
 
             Util.PlayAttackSpeedSound("Play_beetle_guard_death", this.gameObject, 0.5f);
             this.PlayCrossfade("Body", nameof(DefenseUp), "DefenseUp.playbackRate", this.duration, 0.2f);
@@ -51,46 +61,21 @@ namespace EnemiesPlus.Content.Beetle
         {
             base.FixedUpdate();
 
-            if (this.modelAnimator && this.fixedAge > this.delay && !this.hasCastBuff)
+            if (NetworkServer.active && this.fixedAge > this.delay && !this.hasCastBuff)
             {
-                var ed = new EffectData()
-                {
-                    origin = this.transform.position,
-                    rotation = Quaternion.identity
-                };
-                var modelTransform = this.modelLocator ? this.modelLocator.modelTransform : null;
-                if (modelTransform && modelTransform.TryGetComponent<ChildLocator>(out var loc))
-                {
-                    int childIndex = loc.FindChildIndex("Head");
-                    if (childIndex != -1)
-                    {
-                        ed.SetChildLocatorTransformReference(base.gameObject, childIndex);
-                    }
-                }
-                EffectManager.SpawnEffect(DefenseUp.defenseUpPrefab, ed, true);
-
                 this.hasCastBuff = true;
-                if (NetworkServer.active)
+                this.bullseyeSearch.RefreshCandidates();
+                this.bullseyeSearch.FilterOutGameObject(this.gameObject);
+
+                foreach (var nearbyAlly in this.bullseyeSearch.GetResults())
                 {
-                    this.characterBody.AddTimedBuff(RoR2Content.Buffs.ArmorBoost, this.buffDuration);
-
-                    var aimRay = this.GetAimRay();
-                    this.bullseyeSearch.searchOrigin = aimRay.origin;
-                    this.bullseyeSearch.searchDirection = aimRay.direction;
-                    this.bullseyeSearch.RefreshCandidates();
-                    this.bullseyeSearch.FilterOutGameObject(this.gameObject);
-
-                    foreach (var nearbyAlly in this.bullseyeSearch.GetResults().Where(a => a.healthComponent && a.healthComponent.body && !a.healthComponent.body.HasBuff(RoR2Content.Buffs.TeamWarCry)))
-                    {
-                        nearbyAlly.healthComponent.body.AddTimedBuff(RoR2Content.Buffs.TeamWarCry, this.buffDuration);
-                    }
+                    if (nearbyAlly.healthComponent.body)
+                        nearbyAlly.healthComponent.body.AddTimedBuff(RoR2Content.Buffs.TeamWarCry, buffDuration);
                 }
             }
 
-            if (this.fixedAge < this.duration || !this.isAuthority)
-                return;
-
-            this.outer.SetNextStateToMain();
+            if (this.fixedAge >= this.duration && this.isAuthority)
+                this.outer.SetNextStateToMain();
         }
 
         public override void OnExit()

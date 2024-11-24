@@ -6,6 +6,9 @@ using System.Linq;
 using RoR2;
 using EntityStates;
 using RoR2.CharacterAI;
+using MonoMod.Cil;
+using Mono.Cecil.Cil;
+using Inferno.Stat_AI;
 
 namespace EnemiesPlus.Content.Worm
 {
@@ -22,72 +25,84 @@ namespace EnemiesPlus.Content.Worm
 
         private WormChanges()
         {
-            On.RoR2.WormBodyPositionsDriver.FixedUpdateServer += RemoveRandomTurns;
+            if (EnemiesPlusConfig.wormTracking.Value)
+            {
+                On.EntityStates.MagmaWorm.SteerAtTarget.OnEnter += this.SteerAtTarget_OnEnter;
+                IL.RoR2.WormBodyPositionsDriver.FixedUpdateServer += this.WormBodyPositionsDriver_FixedUpdateServer;
+            }
 
-            MagmaWormMaster.ReorderSkillDrivers(1);
+            if (EnemiesPlusConfig.wormLeap.Value)
+            {
+                MagmaWormMaster.ReorderSkillDrivers(1);
 
-            var magmaWormPS = MagmaWorm.GetComponent<ModelLocator>().modelTransform.gameObject.GetComponentsInChildren<ParticleSystem>();
-            foreach (var ps in magmaWormPS)
-                ps.startSize *= 2;
-
-            var magmaWormUtilityDef = MagmaWorm.GetComponent<SkillLocator>().utility.skillFamily.variants[0].skillDef;
-            magmaWormUtilityDef.activationState = new SerializableEntityStateType(typeof(EntityStates.MagmaWorm.Leap));
-            magmaWormUtilityDef.baseRechargeInterval = 60f;
-            magmaWormUtilityDef.activationStateMachineName = "Weapon";
-
-            foreach (var driver in MagmaWormMaster.GetComponents<AISkillDriver>())
-                switch (driver.customName)
+                var magmaWormPS = MagmaWorm.GetComponent<ModelLocator>().modelTransform.gameObject.GetComponentsInChildren<ParticleSystem>();
+                foreach (var ps in magmaWormPS)
                 {
-                    case "Blink":
-                        driver.shouldSprint = true;
-                        driver.minDistance = 0f;
-                        driver.aimType = AISkillDriver.AimType.AtMoveTarget;
-                        break;
-                    default:
-                        driver.skillSlot = SkillSlot.None;
-                        break;
+                    var main = ps.main;
+                    main.startSizeMultiplier *= 2f;
                 }
+
+                var magmaWormUtilityDef = MagmaWorm.GetComponent<SkillLocator>().utility.skillFamily.variants[0].skillDef;
+                magmaWormUtilityDef.activationState = new SerializableEntityStateType(typeof(EntityStates.MagmaWorm.Leap));
+                magmaWormUtilityDef.baseRechargeInterval = 60f;
+                magmaWormUtilityDef.activationStateMachineName = "Weapon";
+
+                foreach (var driver in MagmaWormMaster.GetComponents<AISkillDriver>())
+                {
+                    switch (driver.customName)
+                    {
+                        case "Blink":
+                            driver.shouldSprint = true;
+                            driver.minDistance = 0f;
+                            driver.aimType = AISkillDriver.AimType.AtMoveTarget;
+                            break;
+                        default:
+                            driver.skillSlot = SkillSlot.None;
+                            break;
+                    }
+                }
+            }
         }
 
-        private static void RemoveRandomTurns(On.RoR2.WormBodyPositionsDriver.orig_FixedUpdateServer orig, WormBodyPositionsDriver self)
+        private void WormBodyPositionsDriver_FixedUpdateServer(ILContext il)
         {
-            var body = self.gameObject.GetComponent<CharacterBody>();
-            var targetPosition = self.referenceTransform.position;
+            var c = new ILCursor(il);
 
-            if (body && body.master)
-                if (self.gameObject.GetComponents<EntityStateMachine>().Where(machine => machine.customName == "Weapon").First().state.GetType() != typeof(EntityStates.MagmaWorm.Leap))
-                {
-                    var baseAI = body.masterObject.GetComponent<BaseAI>();
-                    if (baseAI && baseAI.currentEnemy != null && baseAI.currentEnemy.characterBody != null)
-                        targetPosition = baseAI.currentEnemy.characterBody.corePosition;
-                }
-
-            var speedMultiplier = self.wormBodyPositions.speedMultiplier;
-            var normalized = (targetPosition - self.chaserPosition).normalized;
-            var num1 = (float)((self.chaserIsUnderground ? self.maxTurnSpeed : self.maxTurnSpeed * (double)self.turnRateCoefficientAboveGround) * (Math.PI / 180.0));
-            var vector3 = Vector3.RotateTowards(new Vector3(self.chaserVelocity.x, 0.0f, self.chaserVelocity.z), new Vector3(normalized.x, 0.0f, normalized.z) * speedMultiplier, num1 * Time.fixedDeltaTime, float.PositiveInfinity);
-            vector3 = vector3.normalized * speedMultiplier;
-            var num2 = targetPosition.y - self.chaserPosition.y;
-            var num3 = -self.chaserVelocity.y * self.yDamperConstant;
-            var num4 = num2 * self.ySpringConstant;
-            if (self.allowShoving && (double)Mathf.Abs(self.chaserVelocity.y) < self.yShoveVelocityThreshold && (double)num2 > self.yShovePositionThreshold)
-                self.chaserVelocity = self.chaserVelocity.XAZ(self.chaserVelocity.y + self.yShoveForce * Time.fixedDeltaTime);
-            if (!self.chaserIsUnderground)
+            if (c.TryGotoNext(MoveType.After,
+                    x => x.MatchLdarg(0),
+                    x => x.MatchLdfld<WormBodyPositionsDriver>(nameof(WormBodyPositionsDriver.referenceTransform)),
+                    x => x.MatchCallOrCallvirt(out _)
+                ))
             {
-                num4 *= self.wormForceCoefficientAboveGround;
-                num3 *= self.wormForceCoefficientAboveGround;
+                c.Emit(OpCodes.Ldarg_0);
+                c.EmitDelegate<Func<Vector3, WormBodyPositionsDriver, Vector3>>((pos, driver) =>
+                {
+                    if (driver.TryGetComponent<CharacterBody>(out var body) && body.master && body.master.aiComponents?.Any() == true)
+                    {
+                        foreach (var ai in body.master.aiComponents)
+                        {
+                            if (ai && ai.currentEnemy?.unset == false)
+                                ai.currentEnemy.GetBullseyePosition(out pos);
+                        }
+                    }
+                    return pos;
+                });
             }
-            self.chaserVelocity = self.chaserVelocity.XAZ(self.chaserVelocity.y + (num4 + num3) * Time.fixedDeltaTime);
-            self.chaserVelocity += Physics.gravity * Time.fixedDeltaTime;
-            self.chaserVelocity = new Vector3(vector3.x, self.chaserVelocity.y, vector3.z);
-            self.chaserPosition += self.chaserVelocity * Time.fixedDeltaTime;
-            self.chasePositionVisualizer.position = self.chaserPosition;
-            self.chaserIsUnderground = -(double)num2 < self.wormBodyPositions.undergroundTestYOffset;
-            self.keyFrameGenerationTimer -= Time.deltaTime;
-            if (self.keyFrameGenerationTimer > 0.0)
-                return;
-            self.keyFrameGenerationTimer = self.keyFrameGenerationInterval;
-            self.wormBodyPositions.AttemptToGenerateKeyFrame(self.wormBodyPositions.GetSynchronizedTimeStamp() + self.wormBodyPositions.followDelay, self.chaserPosition, self.chaserVelocity);
+        }
+
+        private void SteerAtTarget_OnEnter(On.EntityStates.MagmaWorm.SteerAtTarget.orig_OnEnter orig, EntityStates.MagmaWorm.SteerAtTarget self)
+        {
+            orig(self);
+
+            var master = self.characterBody ? self.characterBody.master : null;
+            if (master && master.aiComponents?.Any() == true)
+            {
+                foreach (var ai in master.aiComponents)
+                {
+                    if (ai && ai.currentEnemy?.gameObject)
+                        self.wormBodyPositionsDriver.referenceTransform = ai.currentEnemy.gameObject.transform;
+                }
+            }
         }
     }
 }

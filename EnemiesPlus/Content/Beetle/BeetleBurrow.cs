@@ -63,9 +63,9 @@ namespace EnemiesPlus.Content.Beetle
                 {
                     var moveDirection = characterMotor.moveDirection.normalized;
                     var estimatedTravelDistance = target.healthComponent.body.moveSpeed * duration;
-                    var differenceFromMotor = difference + (estimatedTravelDistance + radius) * moveDirection;
+                    var differenceFromMotor = difference + ((estimatedTravelDistance + radius) * moveDirection);
                     if (differenceFromMotor.sqrMagnitude <= radius * radius)
-                        differenceFromMotor = difference - (estimatedTravelDistance - radius) * moveDirection;
+                        differenceFromMotor = difference - ((estimatedTravelDistance - radius) * moveDirection);
                     difference = differenceFromMotor;
                 }
             }

@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using EntityStates.BeetleMonster;
+using Inferno.Stat_AI;
 using R2API;
 using RoR2;
 using RoR2.CharacterAI;
@@ -40,7 +41,7 @@ namespace EnemiesPlus.Content.Beetle
 
             MakeJuice();
 
-            if (EnemiesPlusConfig.lilBeetleSkills.Value)
+            if (EnemiesPlusConfig.beetleBurrow.Value || EnemiesPlusConfig.beetleSpit.Value)
                 LilGuyChanges();
 
             if (EnemiesPlusConfig.bgChanges.Value)
@@ -63,6 +64,7 @@ namespace EnemiesPlus.Content.Beetle
 
             beetleSpit = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleQueenSpit.prefab").WaitForCompletion().InstantiateClone("BeetleSpitProjectileScore"); 
             beetleSpit.AddComponent<DamageAPI.ModdedDamageTypeHolderComponent>().Add(beetleJuiceDT);
+            beetleSpit.GetComponent<ProjectileSimple>().desiredForwardSpeed = 60f;
             beetleSpit.transform.localScale /= 2;
             beetleSpit.GetComponent<Rigidbody>().useGravity = false;
 
@@ -89,123 +91,130 @@ namespace EnemiesPlus.Content.Beetle
 
             ContentAddition.AddEffect(beetleSpitExplosion);
             ContentAddition.AddProjectile(beetleSpit);
+            BeetleSpit.projectilePrefab = beetleSpit;
         }
         private void LilGuyChanges()
         {
             BeetleSpawn.TryModifyFieldValue(nameof(SpawnState.duration), 3.5f);
             BeetleBody.GetComponent<CharacterBody>().baseMoveSpeed = 7f;
 
-            if (EnemiesPlusConfig.lilBeetleSkills.Value)
+            if (EnemiesPlusConfig.beetleSpit.Value)
+                MakeSpit();
+            if (EnemiesPlusConfig.beetleBurrow.Value)
+                MakeBurrow();
+
+            var master = BeetleMaster;
+            var ai = master.GetComponent<BaseAI>();
+            ai.aimVectorDampTime = 0.1f;
+            ai.aimVectorMaxSpeed = 180f;
+
+            foreach (var driver in master.GetComponents<AISkillDriver>())
             {
-                BeetlePrimary.baseRechargeInterval = 1f;
-                var spit = BeetleSecondary.GetCopyOf(BeetlePrimary);
-                (spit as ScriptableObject).name = "BeetleBodySpit";
-                spit.activationState = ContentAddition.AddEntityState<BeetleSpit>(out _);
-                spit.skillName = "BeetleSpit";
-                spit.baseRechargeInterval = 4f;
-                spit.baseMaxStock = 1;
-
-                var loc = BeetleBody.GetComponent<SkillLocator>();
-                loc.secondary.skillName = "BeetleSpit";
-
-                ContentAddition.AddEntityState<BeetleBurrow>(out _);
-                ContentAddition.AddEntityState<ExitBurrow>(out _);
-
-                var burrowSkillDef = ScriptableObject.CreateInstance<SkillDef>();
-                (burrowSkillDef as ScriptableObject).name = "BeetleBodyBurrow";
-                burrowSkillDef.skillName = "BeetleBurrow";
-                burrowSkillDef.activationStateMachineName = "Body";
-                burrowSkillDef.activationState = ContentAddition.AddEntityState<EnterBurrow>(out _);
-                burrowSkillDef.baseRechargeInterval = 12f;
-                burrowSkillDef.cancelSprintingOnActivation = false;
-                burrowSkillDef.isCombatSkill = false;
-                ContentAddition.AddSkillDef(burrowSkillDef);
-
-                var utilFamily = ScriptableObject.CreateInstance<SkillFamily>();
-                (utilFamily as ScriptableObject).name = "BeetleBodyUtilityFamily";
-                utilFamily.variants = [new SkillFamily.Variant() { skillDef = burrowSkillDef }];
-
-                var skill = BeetleBody.AddComponent<GenericSkill>();
-                skill.skillName = "BeetleBurrow";
-                skill._skillFamily = utilFamily;
-                loc.utility = skill;
-                
-                ContentAddition.AddSkillFamily(utilFamily);
-
-                var master = BeetleMaster;
-                master.GetComponent<BaseAI>().aimVectorDampTime = 0.1f;
-                master.GetComponent<BaseAI>().aimVectorMaxSpeed = 30f;
-
-                var spitDriver = master.AddComponent<AISkillDriver>();
-                spitDriver.customName = "SpitOffNodeGraph";
-                spitDriver.skillSlot = SkillSlot.Secondary;
-                spitDriver.selectionRequiresAimTarget = true;
-                spitDriver.selectionRequiresTargetLoS = true;
-                spitDriver.requireSkillReady = true;
-                spitDriver.noRepeat = true;
-                spitDriver.minDistance = 7f;
-                spitDriver.maxDistance = 30f;
-                spitDriver.ignoreNodeGraph = true;
-                spitDriver.driverUpdateTimerOverride = -1;
-                spitDriver.activationRequiresAimTargetLoS = true;
-                spitDriver.activationRequiresAimConfirmation = true;
-                spitDriver.movementType = AISkillDriver.MovementType.Stop;
-                spitDriver.moveTargetType = AISkillDriver.TargetType.CurrentEnemy;
-                spitDriver.aimType = AISkillDriver.AimType.AtCurrentEnemy;
-
-                master.ReorderSkillDrivers(spitDriver, 1);
-
-                var oldfollow = master.GetComponents<AISkillDriver>().Last();
-
-                var burrowTowardsTarget = master.AddComponent<AISkillDriver>();
-                burrowTowardsTarget.customName = "BurrowTowardsTarget";
-                burrowTowardsTarget.skillSlot = SkillSlot.Utility;
-                burrowTowardsTarget.requireSkillReady = true;
-                burrowTowardsTarget.minDistance = 30f;
-                burrowTowardsTarget.maxDistance = 60f;
-                burrowTowardsTarget.selectionRequiresTargetLoS = false;
-                burrowTowardsTarget.selectionRequiresAimTarget = false;
-                burrowTowardsTarget.selectionRequiresOnGround = true;
-                burrowTowardsTarget.ignoreNodeGraph = true;
-                burrowTowardsTarget.noRepeat = true;
-                burrowTowardsTarget.movementType = AISkillDriver.MovementType.ChaseMoveTarget;
-                burrowTowardsTarget.moveTargetType = AISkillDriver.TargetType.CurrentEnemy;
-                burrowTowardsTarget.aimType = AISkillDriver.AimType.AtMoveTarget;
-
-                master.AddComponentCopy(oldfollow);
-                Component.DestroyImmediate(oldfollow);
-
-                foreach (var driver in master.GetComponents<AISkillDriver>())
+                switch (driver.customName)
                 {
-                    switch (driver.customName)
-                    {
-                        case "HeadbuttOffNodegraph":
-                            driver.minDistance = 0f;
-                            driver.maxDistance = 7f;
-                            break;
-                        default:
-                            driver.resetCurrentEnemyOnNextDriverSelection = true;
-                            break;
-                    }
+                    case "HeadbuttOffNodegraph":
+                        driver.minDistance = 0f;
+                        driver.maxDistance = 5f;
+                        break;
+                    case "SpitOffNodeGraph":
+                    case "BurrowTowardsTarget":
+                        break;
+                    default:
+                        driver.shouldSprint = true;
+                        break;
                 }
-
-                burrowFX = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleGuardSunderPop.prefab").WaitForCompletion().InstantiateClone("BeetleBurrowEffectScore", false);
-                burrowFX.GetComponent<VFXAttributes>().vfxPriority = VFXAttributes.VFXPriority.Always;
-                var dust = burrowFX.transform.Find("Particles/ParticleInitial/Dust");
-                if (dust && dust.TryGetComponent(out ParticleSystemRenderer dustRenderer))
-                {
-                    dustRenderer.sharedMaterial = new Material(dustRenderer.sharedMaterial);
-                    dustRenderer.sharedMaterial.SetColor("_TintColor", new Color32(201, 126, 44, 255));
-                }
-
-                var decal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleGuardGroundSlam.prefab").WaitForCompletion().transform.Find("ParticleInitial/Decal");
-                if (decal)
-                {
-                    var burrowDecal = Object.Instantiate(decal.gameObject, burrowFX.transform);
-                    burrowDecal.transform.localScale = Vector3.one * 5f;
-                }
-                ContentAddition.AddEffect(burrowFX);
             }
+        }
+        private void MakeSpit()
+        {
+            var spit = BeetleSecondary.GetCopyOf(BeetlePrimary);
+            (spit as ScriptableObject).name = "BeetleBodySpit";
+            spit.activationState = ContentAddition.AddEntityState<BeetleSpit>(out _);
+            spit.skillName = "BeetleSpit";
+            spit.baseRechargeInterval = 3f;
+            spit.baseMaxStock = 1;
+
+            var loc = BeetleBody.GetComponent<SkillLocator>();
+            loc.secondary.skillName = "BeetleSpit";
+
+            var spitDriver = BeetleMaster.AddComponent<AISkillDriver>();
+            spitDriver.customName = "SpitOffNodeGraph";
+            spitDriver.skillSlot = SkillSlot.Secondary;
+            spitDriver.selectionRequiresAimTarget = true;
+            spitDriver.selectionRequiresTargetLoS = true;
+            spitDriver.minDistance = 5f;
+            spitDriver.maxDistance = 25f;
+            spitDriver.ignoreNodeGraph = true;
+            spitDriver.shouldSprint = true;
+            spitDriver.movementType = AISkillDriver.MovementType.ChaseMoveTarget;
+            spitDriver.moveTargetType = AISkillDriver.TargetType.CurrentEnemy;
+            spitDriver.aimType = AISkillDriver.AimType.AtCurrentEnemy;
+
+            BeetleMaster.ReorderSkillDrivers(spitDriver, 1);
+        }
+
+        private void MakeBurrow()
+        {
+            ContentAddition.AddEntityState<BeetleBurrow>(out _);
+            ContentAddition.AddEntityState<ExitBurrow>(out _);
+
+            var burrowSkillDef = ScriptableObject.CreateInstance<SkillDef>();
+            (burrowSkillDef as ScriptableObject).name = "BeetleBodyBurrow";
+            burrowSkillDef.skillName = "BeetleBurrow";
+            burrowSkillDef.activationStateMachineName = "Body";
+            burrowSkillDef.activationState = ContentAddition.AddEntityState<EnterBurrow>(out _);
+            burrowSkillDef.baseRechargeInterval = 12f;
+            burrowSkillDef.cancelSprintingOnActivation = false;
+            burrowSkillDef.isCombatSkill = false;
+            ContentAddition.AddSkillDef(burrowSkillDef);
+
+            var utilFamily = ScriptableObject.CreateInstance<SkillFamily>();
+            (utilFamily as ScriptableObject).name = "BeetleBodyUtilityFamily";
+            utilFamily.variants = [new SkillFamily.Variant() { skillDef = burrowSkillDef }];
+
+            var skill = BeetleBody.AddComponent<GenericSkill>();
+            skill.skillName = "BeetleBurrow";
+            skill._skillFamily = utilFamily;
+
+            var loc = BeetleBody.GetComponent<SkillLocator>();
+            loc.utility = skill;
+
+            ContentAddition.AddSkillFamily(utilFamily);
+
+            var oldfollow = BeetleMaster.GetComponents<AISkillDriver>().Last();
+
+            var burrowTowardsTarget = BeetleMaster.AddComponent<AISkillDriver>();
+            burrowTowardsTarget.customName = "BurrowTowardsTarget";
+            burrowTowardsTarget.skillSlot = SkillSlot.Utility;
+            burrowTowardsTarget.requireSkillReady = true;
+            burrowTowardsTarget.minDistance = 25f;
+            burrowTowardsTarget.maxDistance = 60f;
+            burrowTowardsTarget.selectionRequiresOnGround = true;
+            burrowTowardsTarget.ignoreNodeGraph = true;
+            burrowTowardsTarget.movementType = AISkillDriver.MovementType.ChaseMoveTarget;
+            burrowTowardsTarget.moveTargetType = AISkillDriver.TargetType.CurrentEnemy;
+            burrowTowardsTarget.aimType = AISkillDriver.AimType.AtMoveTarget;
+            burrowTowardsTarget.resetCurrentEnemyOnNextDriverSelection = true;
+
+            BeetleMaster.AddComponentCopy(oldfollow);
+            Component.DestroyImmediate(oldfollow);
+
+            burrowFX = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleGuardSunderPop.prefab").WaitForCompletion().InstantiateClone("BeetleBurrowEffectScore", false);
+            burrowFX.GetComponent<VFXAttributes>().vfxPriority = VFXAttributes.VFXPriority.Always;
+            var dust = burrowFX.transform.Find("Particles/ParticleInitial/Dust");
+            if (dust && dust.TryGetComponent(out ParticleSystemRenderer dustRenderer))
+            {
+                dustRenderer.sharedMaterial = new Material(dustRenderer.sharedMaterial);
+                dustRenderer.sharedMaterial.SetColor("_TintColor", new Color32(201, 126, 44, 255));
+            }
+
+            var decal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleGuardGroundSlam.prefab").WaitForCompletion().transform.Find("ParticleInitial/Decal");
+            if (decal)
+            {
+                var burrowDecal = Object.Instantiate(decal.gameObject, burrowFX.transform);
+                burrowDecal.transform.localScale = Vector3.one * 5f;
+            }
+            ContentAddition.AddEffect(burrowFX);
         }
 
         private void QueenChanges()
@@ -221,7 +230,7 @@ namespace EnemiesPlus.Content.Beetle
             rallyCryDriver.customName = "RallyCry";
             rallyCryDriver.skillSlot = SkillSlot.Utility;
             rallyCryDriver.requireSkillReady = true;
-            rallyCryDriver.maxUserHealthFraction = 0.7f;
+            rallyCryDriver.maxUserHealthFraction = 0.8f;
             rallyCryDriver.movementType = AISkillDriver.MovementType.Stop;
 
             BeetleGuardMaster.ReorderSkillDrivers(rallyCryDriver, 2);

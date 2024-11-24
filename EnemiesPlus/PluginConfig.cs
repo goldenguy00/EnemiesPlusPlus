@@ -8,7 +8,8 @@ namespace EnemiesPlus
         public static ConfigEntry<bool> enableSkills;
         public static ConfigEntry<bool> bellSkills;
         public static ConfigEntry<bool> impSkills;
-        public static ConfigEntry<bool> wormSkills;
+        public static ConfigEntry<bool> wormTracking;
+        public static ConfigEntry<bool> wormLeap;
         public static ConfigEntry<bool> lunarGolemSkills;
 
         public static ConfigEntry<bool> enableTweaks;
@@ -19,7 +20,8 @@ namespace EnemiesPlus
         public static ConfigEntry<bool> lunarWispChanges;
 
         public static ConfigEntry<bool> enableBeetleFamilyChanges;
-        public static ConfigEntry<bool> lilBeetleSkills;
+        public static ConfigEntry<bool> beetleBurrow;
+        public static ConfigEntry<bool> beetleSpit;
         public static ConfigEntry<bool> bgChanges;
         public static ConfigEntry<bool> queenChanges;
 
@@ -50,10 +52,14 @@ namespace EnemiesPlus
                 true,
                 "Adds a new ability that gives them some stuff idk its vanilla but unused", true);
 
-            wormSkills = PluginConfigFile.BindOption(section,
+            wormTracking = PluginConfigFile.BindOption(section,
+                "Enable Worm Tracking Changes",
+                true,
+                "Changes Worms to have better targeting.", true);
+            wormLeap = PluginConfigFile.BindOption(section,
                 "Enable Worms Leap Skill",
                 true,
-                "Adds a new leap skill and changes Worms to have better targeting.", true);
+                "Adds a new leap skill.", true);
 
 
             section = "Tweaks";
@@ -75,7 +81,7 @@ namespace EnemiesPlus
             wispChanges = PluginConfigFile.BindOption(section,
                 "Enable Wisp Changes",
                 true,
-                "Increases Wisp bullet count", true);
+                "Makes the wisp attack a fast projectile and increases Wisp bullet count", true);
 
             greaterWispChanges = PluginConfigFile.BindOption(section,
                 "Enable Greater Wisp Changes",
@@ -94,7 +100,11 @@ namespace EnemiesPlus
                 true,
                 "Enables all beetle related changes. Yes, they needed their own section. Unaffected by other config sections.", true);
 
-            lilBeetleSkills = PluginConfigFile.BindOption(section,
+            beetleBurrow = PluginConfigFile.BindOption(section,
+                "Enable Lil Beetle Burrow Skill",
+                true,
+                "Adds a new projectile attack to beetles and adds a new mobility skill that allows beetles to burrow into the ground and reappear near the player.", true);
+            beetleSpit = PluginConfigFile.BindOption(section,
                 "Enable Lil Beetles Spit Skill",
                 true,
                 "Adds a new projectile attack to beetles and adds a new mobility skill that allows beetles to burrow into the ground and reappear near the player.", true);
@@ -161,7 +171,7 @@ namespace EnemiesPlus
                 {
                     min = 0,
                     max = 20,
-                    formatString = "{0:0.00}",
+                    FormatString = "{0:0.00}",
                     restartRequired = restartRequired
                 }));
                 return;
@@ -208,7 +218,7 @@ namespace EnemiesPlus
                 {
                     min = min,
                     max = max,
-                    formatString = "{0:0.00}",
+                    FormatString = "{0:0.00}",
                     restartRequired = restartRequired
                 }));
         }
