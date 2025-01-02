@@ -8,6 +8,7 @@ using RoR2.CharacterAI;
 using EntityStates.LunarWisp;
 using RoR2.Skills;
 using EntityStates.LunarGolem;
+using RoR2.Projectile;
 
 namespace EnemiesPlus.Content.Lunar
 {
@@ -17,6 +18,8 @@ namespace EnemiesPlus.Content.Lunar
         public static BuffDef helfireDebuff;
         public static DamageAPI.ModdedDamageType helfireDT;
         public static DotController.DotIndex helfireDotIdx;
+        public static BurnEffectController.EffectParams lunarHelfireEffect;
+        public static GameObject lunarHelfireIgniteEffectPrefab;
 
         internal Sprite FireBuffSprite => Addressables.LoadAssetAsync<Sprite>("RoR2/Base/Common/texBuffOnFireIcon.tif").WaitForCompletion();
         internal GameObject LunarGolemMaster => Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarGolem/LunarGolemMaster.prefab").WaitForCompletion();
@@ -25,6 +28,7 @@ namespace EnemiesPlus.Content.Lunar
         internal GameObject LunarWispMaster => Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarWisp/LunarWispMaster.prefab").WaitForCompletion();
         internal EntityStateConfiguration LunarSeekingBomb => Addressables.LoadAssetAsync<EntityStateConfiguration>("RoR2/Base/LunarWisp/EntityStates.LunarWisp.SeekingBomb.asset").WaitForCompletion();
         internal EntityStateConfiguration LunarShell => Addressables.LoadAssetAsync<EntityStateConfiguration>("RoR2/Base/LunarGolem/EntityStates.LunarGolem.Shell.asset").WaitForCompletion();
+        internal EntityStateConfiguration LunarWispGat => Addressables.LoadAssetAsync<EntityStateConfiguration>("RoR2/Base/LunarWisp/EntityStates.LunarWisp.FireLunarGuns.asset").WaitForCompletion();
 
         public static LunarChanges Instance { get; private set; }
 
@@ -51,8 +55,9 @@ namespace EnemiesPlus.Content.Lunar
             GlobalEventManager.onServerDamageDealt += GlobalEventManager_onServerDamageDealt;
 
             helfireDebuff = ScriptableObject.CreateInstance<BuffDef>();
-            (helfireDebuff as ScriptableObject).name = "HelfireDebuff";
+            (helfireDebuff as ScriptableObject).name = "LunarHelfireDebuff";
             helfireDebuff.canStack = true;
+            helfireDebuff.isDOT = true;
             helfireDebuff.isCooldown = false;
             helfireDebuff.isDebuff = true;
             helfireDebuff.buffColor = Color.cyan;
@@ -62,35 +67,44 @@ namespace EnemiesPlus.Content.Lunar
             helfireDT = DamageAPI.ReserveDamageType();
             helfireDotIdx = DotAPI.RegisterDotDef(0.2f, 0f, DamageColorIndex.DeathMark, helfireDebuff, AddPercentHelfireDamage, AddHelfireDotVisuals);
 
+            lunarHelfireIgniteEffectPrefab = LegacyResourcesAPI.Load<GameObject>("Prefabs/Effects/HelfireIgniteEffect");
+            lunarHelfireEffect = new BurnEffectController.EffectParams
+            {
+                startSound = "Play_item_proc_igniteOnKill_Loop",
+                stopSound = "Stop_item_proc_igniteOnKill_Loop"
+            };
+            LegacyResourcesAPI.LoadAsyncCallback("Materials/matOnHelfire", delegate (Material val)
+            {
+                lunarHelfireEffect.overlayMaterial = val;
+            });
+            LegacyResourcesAPI.LoadAsyncCallback("Prefabs/HelfireEffect", delegate (GameObject val)
+            {
+                lunarHelfireEffect.fireEffectPrefab = val;
+            });
+
             lunarWispTrackingBomb = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarWisp/LunarWispTrackingBomb.prefab").WaitForCompletion().InstantiateClone("LunarWispOrbScore");
-            lunarWispTrackingBomb.AddComponent<DamageAPI.ModdedDamageTypeHolderComponent>().Add(helfireDT);
+            lunarWispTrackingBomb.GetComponent<ProjectileDamage>().damageType.AddModdedDamageType(helfireDT);
+
             ContentAddition.AddProjectile(lunarWispTrackingBomb);
 
             LunarSeekingBomb.TryModifyFieldValue(nameof(SeekingBomb.projectilePrefab), lunarWispTrackingBomb);
+
+            if (LunarWispGat.TryGetFieldValueString<float>(nameof(FireLunarGuns.baseDamagePerSecondCoefficient), out var baseDmg))
+                LunarWispGat.TryModifyFieldValue<float>(nameof(FireLunarGuns.baseDamagePerSecondCoefficient), baseDmg * 0.5f);
         }
 
         private static void AddHelfireDotVisuals(DotController self)
         {
-            if (self.victimObject)
-                return;
-
-            if (self.HasDotActive(helfireDotIdx))
+            if (self.victimBody && self.HasDotActive(helfireDotIdx))
             {
-                if (!self.helfireEffectController)
+                var modelTransform = self.victimBody.modelLocator ? self.victimBody.modelLocator.modelTransform : null;
+                if (modelTransform && !self.GetComponent<LunarHelfireController>())
                 {
-                    var modelLocator = self.victimObject.GetComponent<ModelLocator>();
-                    if ((bool)modelLocator && (bool)modelLocator.modelTransform)
-                    {
-                        self.helfireEffectController = self.gameObject.AddComponent<BurnEffectController>();
-                        self.helfireEffectController.effectType = BurnEffectController.helfireEffect;
-                        self.helfireEffectController.target = modelLocator.modelTransform.gameObject;
-                    }
+                    var ctrl = self.gameObject.AddComponent<LunarHelfireController>();
+                    ctrl.target = modelTransform.gameObject;
+                    ctrl.effectType = lunarHelfireEffect;
+                    ctrl.dotController = self;
                 }
-            }
-            else if ((bool)self.helfireEffectController)
-            {
-                self.helfireEffectController.HandleDestroy();
-                self.helfireEffectController = null;
             }
         }
 
@@ -101,13 +115,12 @@ namespace EnemiesPlus.Content.Lunar
                 if (self.victimBody && self.victimBody.healthComponent)
                 {
                     dotStack.damageType |= DamageType.NonLethal;
+                    // 6s/0.2 = 30t total
+                    // 30 * 0.4 = 12%
+                    // % Hp no shield
                     dotStack.damage = self.victimBody.healthComponent.fullHealth * 0.01f * 0.4f;
 
-                    if (DotController.HelfireIgniteEffectPrefab == null)
-                    {
-                        DotController.HelfireIgniteEffectPrefab = LegacyResourcesAPI.Load<GameObject>("Prefabs/Effects/HelfireIgniteEffect");
-                    }
-                    EffectManager.SpawnEffect(DotController.HelfireIgniteEffectPrefab, new EffectData
+                    EffectManager.SpawnEffect(lunarHelfireIgniteEffectPrefab, new EffectData
                     {
                         origin = self.victimBody.corePosition
                     }, transmit: true);
@@ -140,7 +153,7 @@ namespace EnemiesPlus.Content.Lunar
 
         private void LunarGolemChanges()
         {
-            LunarShell.TryModifyFieldValue(nameof(Shell.buffDuration), 8f);
+            LunarShell.TryModifyFieldValue(nameof(Shell.buffDuration), 12f);
             LunarGolemShield.baseRechargeInterval = 30f;
             LunarGolemMaster.GetComponents<AISkillDriver>().Where(driver => driver.customName == "StrafeAndShoot").First().requireSkillReady = true;
 
@@ -160,12 +173,16 @@ namespace EnemiesPlus.Content.Lunar
         #region Hooks
         private void GlobalEventManager_onServerDamageDealt(DamageReport damageReport)
         {
-            if (damageReport.damageInfo?.rejected == false && damageReport.attackerBody && damageReport.victimBody &&
-               (damageReport.attackerBody.HasBuff(RoR2Content.Buffs.LunarShell) || damageReport.damageInfo.HasModdedDamageType(helfireDT)) &&
-                Util.CheckRoll(0.2f * damageReport.damageInfo.procCoefficient, damageReport.attackerMaster ?? damageReport.attackerOwnerMaster))
+            if (damageReport.damageInfo.rejected || !damageReport.attackerBody || !damageReport.victimBody)
+                return;
+
+            if (damageReport.attackerBody.HasBuff(RoR2Content.Buffs.LunarShell) || damageReport.damageInfo.HasModdedDamageType(helfireDT))
             {
-                DotController.InflictDot(damageReport.victimBody.gameObject, damageReport.attacker, helfireDotIdx, 6f, damageReport.damageInfo.procCoefficient);
-                damageReport.victimBody.AddTimedBuff(RoR2Content.Buffs.HealingDisabled, 6f);
+                if (Util.CheckRoll(25f * damageReport.damageInfo.procCoefficient, damageReport.attackerMaster))
+                {
+                    DotController.InflictDot(damageReport.victim.gameObject, damageReport.attacker, helfireDotIdx, 6f, 1f, 3);
+                    damageReport.victimBody.AddTimedBuff(RoR2Content.Buffs.HealingDisabled, 6f);
+                }
             }
         }
         #endregion

@@ -2,49 +2,70 @@ using RoR2;
 using System.Linq;
 using UnityEngine;
 using EntityStates.Bell.BellWeapon;
+using EntityStates;
+using UnityEngine.Networking;
+using Inferno.Stat_AI;
+using UnityEngine.AddressableAssets;
 
 namespace EnemiesPlus.Content.Donger
 {
-    public class BuffBeamPlus : BuffBeam
+    public class BuffBeamPlus : BaseState
     {
+        public static float duration = 12f;
+
+        public static GameObject buffBeamPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Bell/BellBuffBeam.prefab").WaitForCompletion();
+        public static AnimationCurve beamWidthCurve;
+
+        public static string playBeamSoundString = "Play_emergency_drone_heal_loop";
+        public static string stopBeamSoundString = "Stop_emergency_drone_heal_loop";
+
+        public HurtBox targetHurtbox;
+
+        public GameObject buffBeamInstance;
+        public BezierCurveLine healBeamCurve;
+        public Transform muzzleTransform;
+        public Transform beamTipTransform;
+
         public override void OnEnter()
         {
-            if (base.characterBody)
-            {
-                attackSpeedStat = base.characterBody.attackSpeed;
-                damageStat = base.characterBody.damage;
-                critStat = base.characterBody.crit;
-                moveSpeedStat = base.characterBody.moveSpeed;
-            }
+            base.OnEnter();
 
             Util.PlaySound(playBeamSoundString, base.gameObject);
             var aimRay = GetAimRay();
-            var bs = new BullseyeSearch
+            var buddySearch = new BullseyeSearch
             {
-                filterByLoS = false,
-                maxDistanceFilter = 50f,
+                teamMaskFilter = TeamMask.none,
+                sortMode = BullseyeSearch.SortMode.Distance,
+                maxDistanceFilter = 75f,
                 searchOrigin = aimRay.origin,
                 searchDirection = aimRay.direction,
-                sortMode = BullseyeSearch.SortMode.Angle,
-                teamMaskFilter = TeamMask.none
+                maxAngleFilter = 180f,
+                filterByLoS = true
             };
-            if (base.teamComponent)
-                bs.teamMaskFilter.AddTeam(base.teamComponent.teamIndex);
+            buddySearch.teamMaskFilter.AddTeam(teamComponent.teamIndex);
+            buddySearch.RefreshCandidates();
+            buddySearch.FilterOutGameObject(base.characterBody.gameObject);
 
-            bs.RefreshCandidates();
-            bs.FilterOutGameObject(base.gameObject);
-            target = bs.GetResults().Where(x => x.healthComponent.body && x.healthComponent.body.bodyIndex != this.characterBody.bodyIndex).FirstOrDefault();
+            foreach (var hurtBox in buddySearch.GetResults())
+            {
+                var body = hurtBox.healthComponent ? hurtBox.healthComponent.body : null;
+                if (body && body.hullClassification != HullClassification.BeetleQueen && body.bodyIndex != base.characterBody.bodyIndex)
+                {
+                    targetHurtbox = hurtBox;
+                }
+            }
 
-            if (target)
+            if (targetHurtbox)
             {
                 this.StartAimMode(BuffBeam.duration);
-                targetBody = target.healthComponent.body;
-                targetBody.AddBuff(RoR2Content.Buffs.ElephantArmorBoost.buffIndex);
+                targetHurtbox.healthComponent.body.AddBuff(RoR2Content.Buffs.ElephantArmorBoost.buffIndex);
             }
             else
             {
                 skillLocator.secondary.AddOneStock();
                 this.outer.SetNextStateToMain();
+
+                return;
             }
 
             string childName = "Muzzle";
@@ -57,20 +78,76 @@ namespace EnemiesPlus.Content.Donger
                 if (beamChildLoc)
                 {
                     beamTipTransform = beamChildLoc.FindChild("BeamTip");
+                    healBeamCurve = buffBeamInstance.GetComponentInChildren<BezierCurveLine>();
                 }
-
-                healBeamCurve = buffBeamInstance.GetComponentInChildren<BezierCurveLine>();
             }
+        }
+
+        public override void FixedUpdate()
+        {
+            base.FixedUpdate();
+            if (!base.isAuthority)
+                return;
+
+            if (base.fixedAge >= duration || !targetHurtbox || !targetHurtbox.healthComponent || !targetHurtbox.healthComponent.alive)
+            {
+                outer.SetNextStateToMain();
+            }
+        }
+
+        public void UpdateHealBeamVisuals()
+        {
+            if (healBeamCurve)
+            {
+                float widthMultiplier = beamWidthCurve.Evaluate(base.age / duration);
+                healBeamCurve.lineRenderer.widthMultiplier = widthMultiplier;
+                healBeamCurve.v0 = muzzleTransform.forward * 3f;
+                healBeamCurve.transform.position = muzzleTransform.position;
+                if (targetHurtbox)
+                {
+                    beamTipTransform.position = targetHurtbox.transform.position;
+                }
+            }
+        }
+
+        public override void Update()
+        {
+            base.Update();
+            UpdateHealBeamVisuals();
         }
 
         public override void OnExit()
         {
-            base.OnExit();
+            Util.PlaySound(stopBeamSoundString, base.gameObject);
 
-            if (targetBody)
+            if (buffBeamInstance)
+                Destroy(buffBeamInstance);
+
+            if (NetworkServer.active && targetHurtbox && targetHurtbox.healthComponent && targetHurtbox.healthComponent.body)
             {
-                targetBody.RemoveBuff(RoR2Content.Buffs.ElephantArmorBoost.buffIndex);
+                targetHurtbox.healthComponent.body.RemoveBuff(RoR2Content.Buffs.ElephantArmorBoost.buffIndex);
             }
+
+            base.OnExit();
+        }
+
+        public override InterruptPriority GetMinimumInterruptPriority()
+        {
+            return InterruptPriority.Stun;
+        }
+
+        public override void OnSerialize(NetworkWriter writer)
+        {
+            base.OnSerialize(writer);
+            HurtBoxReference.FromHurtBox(targetHurtbox).Write(writer);
+        }
+
+        public override void OnDeserialize(NetworkReader reader)
+        {
+            base.OnDeserialize(reader);
+            HurtBoxReference hurtBoxReference = default;
+            hurtBoxReference.Read(reader);
+            targetHurtbox = hurtBoxReference.ResolveGameObject()?.GetComponent<HurtBox>();
         }
     }
 }

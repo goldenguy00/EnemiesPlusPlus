@@ -59,11 +59,11 @@ namespace EnemiesPlus.Content.Beetle
 
         private void MakeJuice()
         {
-            BeetleJuice.canStack = true;
+            BeetleJuice.canStack = false;
             beetleJuiceDT = DamageAPI.ReserveDamageType();
 
             beetleSpit = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleQueenSpit.prefab").WaitForCompletion().InstantiateClone("BeetleSpitProjectileScore"); 
-            beetleSpit.AddComponent<DamageAPI.ModdedDamageTypeHolderComponent>().Add(beetleJuiceDT);
+            beetleSpit.GetComponent<ProjectileDamage>().damageType.AddModdedDamageType(beetleJuiceDT);
             beetleSpit.GetComponent<ProjectileSimple>().desiredForwardSpeed = 60f;
             beetleSpit.transform.localScale /= 2;
             beetleSpit.GetComponent<Rigidbody>().useGravity = false;
@@ -93,6 +93,7 @@ namespace EnemiesPlus.Content.Beetle
             ContentAddition.AddProjectile(beetleSpit);
             BeetleSpit.projectilePrefab = beetleSpit;
         }
+
         private void LilGuyChanges()
         {
             BeetleSpawn.TryModifyFieldValue(nameof(SpawnState.duration), 3.5f);
@@ -220,8 +221,8 @@ namespace EnemiesPlus.Content.Beetle
         private void QueenChanges()
         {
             BeetleQueenSpit.GetComponent<ProjectileImpactExplosion>().destroyOnEnemy = true;
-            BeetleQueenSpit.AddComponent<DamageAPI.ModdedDamageTypeHolderComponent>().Add(beetleJuiceDT);
-            BeetleQueenAcid.AddComponent<DamageAPI.ModdedDamageTypeHolderComponent>().Add(beetleJuiceDT);
+            BeetleQueenSpit.GetComponent<ProjectileDamage>().damageType.AddModdedDamageType(beetleJuiceDT);
+            BeetleQueenAcid.GetComponent<ProjectileDamage>().damageType.AddModdedDamageType(beetleJuiceDT);
         }
 
         private void GuardChanges()

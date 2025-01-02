@@ -180,17 +180,51 @@ namespace EnemiesPlus
         public static bool TryModifyFieldValue<T>(this EntityStateConfiguration entityStateConfiguration, string fieldName, T value)
         {
             ref var serializedField = ref entityStateConfiguration.serializedFieldsCollection.GetOrCreateField(fieldName);
-            var type = typeof(T);
-            if (serializedField.fieldValue.objectValue && typeof(UnityEngine.Object).IsAssignableFrom(type))
+            if (serializedField.fieldValue.objectValue && typeof(UnityEngine.Object).IsAssignableFrom(typeof(T)))
             {
                 serializedField.fieldValue.objectValue = value as UnityEngine.Object;
                 return true;
             }
-            else if (serializedField.fieldValue.stringValue != null && StringSerializer.CanSerializeType(type))
+            else if (serializedField.fieldValue.stringValue != null && StringSerializer.CanSerializeType(typeof(T)))
             {
-                serializedField.fieldValue.stringValue = StringSerializer.Serialize(type, value);
+                serializedField.fieldValue.stringValue = StringSerializer.Serialize(typeof(T), value);
                 return true;
             }
+            Debug.LogError("Failed to modify field " + fieldName);
+            return false;
+        }
+
+        public static bool TryGetFieldValue<T>(this EntityStateConfiguration entityStateConfiguration, string fieldName, out T value) where T : UnityEngine.Object
+        {
+            ref var serializedField = ref entityStateConfiguration.serializedFieldsCollection.GetOrCreateField(fieldName);
+            if (serializedField.fieldValue.objectValue && typeof(UnityEngine.Object).IsAssignableFrom(typeof(T)))
+            {
+                value = (T)serializedField.fieldValue.objectValue;
+                return true;
+            }
+            if (!string.IsNullOrEmpty(serializedField.fieldValue.stringValue))
+                Debug.LogError($"Failed to return {fieldName} as an Object, try getting the string value instead.");
+            else
+                Debug.LogError("Field is null " + fieldName);
+            value = default;
+            return false;
+        }
+
+        public static bool TryGetFieldValueString<T>(this EntityStateConfiguration entityStateConfiguration, string fieldName, out T value) where T : IEquatable<T>
+        {
+            ref var serializedField = ref entityStateConfiguration.serializedFieldsCollection.GetOrCreateField(fieldName);
+            if (serializedField.fieldValue.stringValue != null && StringSerializer.CanSerializeType(typeof(T)))
+            {
+                value = (T)StringSerializer.Deserialize(typeof(T), serializedField.fieldValue.stringValue);
+                return true;
+            }
+
+            if (serializedField.fieldValue.objectValue)
+                Debug.LogError($"Failed to return {fieldName} as a string, try getting the Object value instead.");
+            else
+                Debug.LogError("Field is null " + fieldName);
+
+            value = default;
             return false;
         }
     }

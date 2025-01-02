@@ -26,7 +26,7 @@ namespace EnemiesPlus.Content.Beetle
             if (this.characterMotor)
                 this.characterMotor.walkSpeedPenaltyCoefficient = 0f;
 
-            Util.PlayAttackSpeedSound(attackSoundString, this.gameObject, this.attackSpeedStat);
+            Util.PlayAttackSpeedSound(attackSoundString, this.gameObject, this.attackSpeedStat / 2f);
             this.PlayCrossfade("Body", "EmoteSurprise", "Headbutt.playbackRate", this.duration, 0.1f);
         }
 
