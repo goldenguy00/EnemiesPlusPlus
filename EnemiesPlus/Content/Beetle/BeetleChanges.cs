@@ -1,6 +1,8 @@
 ﻿using System.Linq;
 using EntityStates.BeetleMonster;
+using HarmonyLib;
 using Inferno.Stat_AI;
+using MonoMod.Cil;
 using R2API;
 using RoR2;
 using RoR2.CharacterAI;
@@ -38,6 +40,7 @@ namespace EnemiesPlus.Content.Beetle
         private BeetleChanges()
         {
             GlobalEventManager.onServerDamageDealt += GlobalEventManager_onServerDamageDealt;
+            IL.RoR2.CharacterBody.RecalculateStats += CharacterBody_RecalculateStats;
 
             MakeJuice();
 
@@ -51,9 +54,32 @@ namespace EnemiesPlus.Content.Beetle
                 QueenChanges();
         }
 
-        private void GlobalEventManager_onServerDamageDealt(DamageReport damageReport)
+        private static void CharacterBody_RecalculateStats(ILContext il)
         {
-            if (damageReport?.damageInfo?.rejected == false && damageReport.victimBody && damageReport.damageInfo.HasModdedDamageType(beetleJuiceDT))
+            var c = new ILCursor(il);
+
+            int juiceLoc = 0;
+            if (c.TryGotoNext(
+                    x => x.MatchLdarg(0),
+                    x => x.MatchLdsfld(AccessTools.Field(typeof(RoR2Content.Buffs), nameof(RoR2Content.Buffs.BeetleJuice))),
+                    x => x.MatchCallOrCallvirt<CharacterBody>(nameof(CharacterBody.GetBuffCount))) &&
+                c.TryGotoNext(x => x.MatchStloc(out juiceLoc)) &&
+                c.TryGotoNext(
+                    x => x.MatchLdcR4(1),
+                    x => x.MatchLdcR4(out _),
+                    x => x.MatchLdloc(juiceLoc)
+                ))
+            {
+                c.Index++;
+                c.Next.Operand = 0.01f;
+            }
+            else
+                Log.Error("ILHook failed for beetle juice CharacterBody.RecalculateStats");
+        }
+
+        private static void GlobalEventManager_onServerDamageDealt(DamageReport damageReport)
+        {
+            if (damageReport.damageInfo?.rejected == false && damageReport.victimBody && damageReport.damageInfo.HasModdedDamageType(beetleJuiceDT))
                 damageReport.victimBody.AddTimedBuff(RoR2Content.Buffs.BeetleJuice, 5f);
         }
 
@@ -222,7 +248,6 @@ namespace EnemiesPlus.Content.Beetle
         {
             BeetleQueenSpit.GetComponent<ProjectileImpactExplosion>().destroyOnEnemy = true;
             BeetleQueenSpit.GetComponent<ProjectileDamage>().damageType.AddModdedDamageType(beetleJuiceDT);
-            BeetleQueenAcid.GetComponent<ProjectileDamage>().damageType.AddModdedDamageType(beetleJuiceDT);
         }
 
         private void GuardChanges()
