@@ -8,7 +8,6 @@ using EntityStates;
 using RoR2.CharacterAI;
 using MonoMod.Cil;
 using Mono.Cecil.Cil;
-using Inferno.Stat_AI;
 
 namespace EnemiesPlus.Content.Worm
 {
@@ -27,6 +26,8 @@ namespace EnemiesPlus.Content.Worm
         {
             if (EnemiesPlusConfig.wormTracking.Value)
             {
+                EntityStates.MagmaWorm.SteerAtTarget.fastTurnRate = 120f;
+                EntityStates.MagmaWorm.SteerAtTarget.slowTurnRate = 45f;
                 On.EntityStates.MagmaWorm.SteerAtTarget.OnEnter += this.SteerAtTarget_OnEnter;
                 IL.RoR2.WormBodyPositionsDriver.FixedUpdateServer += this.WormBodyPositionsDriver_FixedUpdateServer;
             }
@@ -77,11 +78,11 @@ namespace EnemiesPlus.Content.Worm
                 c.Emit(OpCodes.Ldarg_0);
                 c.EmitDelegate<Func<Vector3, WormBodyPositionsDriver, Vector3>>((pos, driver) =>
                 {
-                    if (driver.TryGetComponent<CharacterBody>(out var body) && body.master && body.master.aiComponents?.Any() == true)
+                    if (driver.TryGetComponent<CharacterBody>(out var body) && body.master)
                     {
                         foreach (var ai in body.master.aiComponents)
                         {
-                            if (ai && ai.currentEnemy?.unset == false)
+                            if (ai && ai.currentEnemy?.unset == false && ai.currentEnemy.hasLoS)
                                 ai.currentEnemy.GetBullseyePosition(out pos);
                         }
                     }
@@ -95,7 +96,7 @@ namespace EnemiesPlus.Content.Worm
             orig(self);
 
             var master = self.characterBody ? self.characterBody.master : null;
-            if (master && master.aiComponents?.Any() == true)
+            if (master)
             {
                 foreach (var ai in master.aiComponents)
                 {

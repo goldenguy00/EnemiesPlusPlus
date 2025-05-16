@@ -1,10 +1,8 @@
 using RoR2;
-using System.Linq;
 using UnityEngine;
 using EntityStates.Bell.BellWeapon;
 using EntityStates;
 using UnityEngine.Networking;
-using Inferno.Stat_AI;
 using UnityEngine.AddressableAssets;
 
 namespace EnemiesPlus.Content.Donger
@@ -97,16 +95,20 @@ namespace EnemiesPlus.Content.Donger
 
         public void UpdateHealBeamVisuals()
         {
-            if (healBeamCurve)
+            if (muzzleTransform && healBeamCurve)
             {
-                float widthMultiplier = beamWidthCurve.Evaluate(base.age / duration);
-                healBeamCurve.lineRenderer.widthMultiplier = widthMultiplier;
+                if (beamWidthCurve != null)
+                {
+                    float widthMultiplier = beamWidthCurve.Evaluate(base.age / duration);
+                    if (healBeamCurve.lineRenderer)
+                        healBeamCurve.lineRenderer.widthMultiplier = widthMultiplier;
+                }
+
                 healBeamCurve.v0 = muzzleTransform.forward * 3f;
                 healBeamCurve.transform.position = muzzleTransform.position;
+
                 if (targetHurtbox)
-                {
                     beamTipTransform.position = targetHurtbox.transform.position;
-                }
             }
         }
 

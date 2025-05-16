@@ -32,7 +32,8 @@ namespace EnemiesPlus.Content.Imp
             spikeDriver.customName = "ImpVoidSpikes";
             spikeDriver.skillSlot = SkillSlot.Secondary;
             spikeDriver.maxDistance = 30f;
-            spikeDriver.minDistance = 10f;
+            spikeDriver.minDistance = 15f;
+            spikeDriver.shouldSprint = false;
             spikeDriver.selectionRequiresAimTarget = true;
             spikeDriver.selectionRequiresTargetLoS = true;
             spikeDriver.requireSkillReady = true;

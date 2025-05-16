@@ -26,7 +26,7 @@ namespace EnemiesPlus.Content.Beetle
             if (this.characterMotor)
                 this.characterMotor.walkSpeedPenaltyCoefficient = 0f;
 
-            Util.PlayAttackSpeedSound(attackSoundString, this.gameObject, this.attackSpeedStat / 2f);
+            Util.PlayAttackSpeedSound(attackSoundString, this.gameObject, this.duration - this.fireTime);
             this.PlayCrossfade("Body", "EmoteSurprise", "Headbutt.playbackRate", this.duration, 0.1f);
         }
 
@@ -36,9 +36,10 @@ namespace EnemiesPlus.Content.Beetle
             {
                 hasFired = true;
                 var aimRay = GetAimRay();
+                Util.PlayAttackSpeedSound(attackSoundString, this.gameObject, this.duration - this.fireTime);
                 if (base.isAuthority)
                 {
-                    ProjectileManager.instance.FireProjectile(projectilePrefab, aimRay.origin, Util.QuaternionSafeLookRotation(aimRay.direction), this.gameObject, this.damageStat, 0.0f, base.RollCrit());
+                    ProjectileManager.instance.FireProjectile(projectilePrefab, aimRay.origin, Util.QuaternionSafeLookRotation(aimRay.direction), this.gameObject, this.damageStat, 0f, base.RollCrit());
                 }
             }
         }

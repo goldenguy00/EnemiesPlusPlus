@@ -88,11 +88,10 @@ namespace EnemiesPlus.Content.Beetle
             BeetleJuice.canStack = false;
             beetleJuiceDT = DamageAPI.ReserveDamageType();
 
-            beetleSpit = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleQueenSpit.prefab").WaitForCompletion().InstantiateClone("BeetleSpitProjectileScore"); 
-            beetleSpit.GetComponent<ProjectileDamage>().damageType.AddModdedDamageType(beetleJuiceDT);
+            beetleSpit = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleQueenSpit.prefab").WaitForCompletion().InstantiateClone("BeetleSpitProjectileScore");
             beetleSpit.GetComponent<ProjectileSimple>().desiredForwardSpeed = 60f;
             beetleSpit.transform.localScale /= 2;
-            beetleSpit.GetComponent<Rigidbody>().useGravity = false;
+            beetleSpit.GetComponent<Rigidbody>().useGravity = true;
 
             beetleSpitExplosion = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleSpitExplosion.prefab").WaitForCompletion().InstantiateClone("BeetleSpitExplosionScore", false);
             beetleSpitExplosion.transform.GetChild(0).localScale /= 2;
