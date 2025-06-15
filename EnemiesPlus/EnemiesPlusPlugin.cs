@@ -27,13 +27,11 @@ namespace EnemiesPlus
         public const string PluginGUID = $"com.{PluginAuthor}.{PluginName}";
         public const string PluginAuthor = "score";
         public const string PluginName = "EnemiesPlusPlus";
-        public const string PluginVersion = "1.0.6";
+        public const string PluginVersion = "1.1.0";
 
         public static EnemiesPlusPlugin Instance { get; private set; }
 
         public static bool RooInstalled => Chainloader.PluginInfos.ContainsKey("com.rune580.riskofoptions");
-        public static bool InfernoInstalled => Chainloader.PluginInfos.ContainsKey("HIFU.Inferno");
-        public static bool RiskyArtifactsInstalled => Chainloader.PluginInfos.ContainsKey("com.Moffein.RiskyArtifacts");
         public static bool LeagueOfLiteralGays => Chainloader.PluginInfos.ContainsKey("com.phreel.TitansOfTheRiftSOTV");
 
         public void Awake()
@@ -61,37 +59,6 @@ namespace EnemiesPlus
 
             if (EnemiesPlusConfig.enableBeetleFamilyChanges.Value)
                 BeetleChanges.Init();
-        }
-
-
-        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        private static float GetRiskyArtifactsWarfareProjectileSpeedMult()
-        {
-            if (RunArtifactManager.instance && RunArtifactManager.instance.IsArtifactEnabled(Risky_Artifacts.Artifacts.Warfare.artifact))
-            {
-                return Risky_Artifacts.Artifacts.Warfare.projSpeed;
-            }
-            return 1f;
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        private static float GetInfernoProjectileSpeedMult()
-        {
-            if (Run.instance && Run.instance.selectedDifficulty == Inferno.Main.InfernoDiffIndex)
-            {
-                return Inferno.Main.ProjectileSpeed.Value;
-            }
-            return 1f;
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        public static void GetProjectileSpeedModifiers(ref float speed)
-        {
-            if (InfernoInstalled)
-                speed *= GetInfernoProjectileSpeedMult();
-
-            if (RiskyArtifactsInstalled)
-                speed *= GetRiskyArtifactsWarfareProjectileSpeedMult();
         }
     }
 }

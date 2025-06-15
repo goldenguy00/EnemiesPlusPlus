@@ -29,7 +29,7 @@ namespace EnemiesPlus.Content.Worm
                 EntityStates.MagmaWorm.SteerAtTarget.fastTurnRate = 120f;
                 EntityStates.MagmaWorm.SteerAtTarget.slowTurnRate = 45f;
                 On.EntityStates.MagmaWorm.SteerAtTarget.OnEnter += this.SteerAtTarget_OnEnter;
-                IL.RoR2.WormBodyPositionsDriver.FixedUpdateServer += this.WormBodyPositionsDriver_FixedUpdateServer;
+                //IL.RoR2.WormBodyPositionsDriver.FixedUpdateServer += this.WormBodyPositionsDriver_FixedUpdateServer;
             }
 
             if (EnemiesPlusConfig.wormLeap.Value)

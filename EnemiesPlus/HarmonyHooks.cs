@@ -31,7 +31,9 @@ namespace EnemiesPlus
             reksaiCard.minimumStageCompletions = 2;
             var master = reksaiCard.spawnCard.prefab.GetComponent<CharacterMaster>();
             var aiList = master.GetComponents<RoR2.CharacterAI.AISkillDriver>();
+
             foreach (var ai in aiList)
+            {
                 switch (ai.customName)
                 {
                     case "Special":
@@ -48,6 +50,7 @@ namespace EnemiesPlus
                     case "Chase":
                         break;
                 }
+            }
             master.bodyPrefab.GetComponent<CharacterBody>().baseMoveSpeed = 10;
         }
     }

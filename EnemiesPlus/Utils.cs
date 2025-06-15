@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
 using HG.GeneralSerializer;
 using RoR2;
@@ -18,7 +17,7 @@ namespace EnemiesPlus
         public static void ReorderSkillDrivers(this GameObject master, AISkillDriver targetSkill, int targetIdx)
         {
             var c = master.GetComponents<AISkillDriver>();
-            master.ReorderSkillDrivers(c, Array.IndexOf(c, targetSkill), targetIdx);
+            master.ReorderSkillDrivers(c, System.Array.IndexOf(c, targetSkill), targetIdx);
         }
         public static void ReorderSkillDrivers(this GameObject master, AISkillDriver[] skills, int currentIdx, int targetIdx)
         {
@@ -69,7 +68,7 @@ namespace EnemiesPlus
             // sanity check
             skills = master.GetComponents<AISkillDriver>();
             var newTarget = skills.FirstOrDefault(s => s.customName == targetName);
-            if (newTarget != null && Array.IndexOf(skills, newTarget) == targetIdx)
+            if (newTarget != null && System.Array.IndexOf(skills, newTarget) == targetIdx)
                 Log.Debug($"Successfully set {targetName} to {targetIdx}");
             else
                 Log.Error($"Done fucked it up on {targetName} with {targetIdx}");
@@ -210,7 +209,7 @@ namespace EnemiesPlus
             return false;
         }
 
-        public static bool TryGetFieldValueString<T>(this EntityStateConfiguration entityStateConfiguration, string fieldName, out T value) where T : IEquatable<T>
+        public static bool TryGetFieldValueString<T>(this EntityStateConfiguration entityStateConfiguration, string fieldName, out T value) where T : System.IEquatable<T>
         {
             ref var serializedField = ref entityStateConfiguration.serializedFieldsCollection.GetOrCreateField(fieldName);
             if (serializedField.fieldValue.stringValue != null && StringSerializer.CanSerializeType(typeof(T)))

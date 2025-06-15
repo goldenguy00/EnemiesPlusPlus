@@ -27,14 +27,19 @@ namespace EnemiesPlus.Content.Beetle
                 characterModel = modelTransform.GetComponent<CharacterModel>();
                 hurtboxGroup = modelTransform.GetComponent<HurtBoxGroup>();
             }
+
             if (characterModel)
                 characterModel.invisibilityCount++;
             if (hurtboxGroup)
                 hurtboxGroup.hurtBoxesDeactivatorCounter++;
-            if (characterMotor)
-                characterMotor.enabled = false;
+
             gameObject.layer = LayerIndex.fakeActor.intVal;
-            characterMotor.Motor.RebuildCollidableLayers();
+            if (characterMotor)
+            {
+                characterMotor.enabled = false;
+                characterMotor.Motor.RebuildCollidableLayers();
+            }
+
             CalculatePredictedDestination();
             Util.PlaySound("Play_magmaWorm_burrowed_loop", gameObject);
         }
@@ -104,12 +109,14 @@ namespace EnemiesPlus.Content.Beetle
             SetPosition(finalPosition);
             gameObject.layer = LayerIndex.defaultLayer.intVal;
             characterMotor?.Motor.RebuildCollidableLayers();
+            
             if (characterModel)
                 characterModel.invisibilityCount--;
             if (hurtboxGroup)
                 hurtboxGroup.hurtBoxesDeactivatorCounter--;
             if (characterMotor)
                 characterMotor.enabled = true;
+
             Util.PlaySound("Stop_magmaWorm_burrowed_loop", gameObject);
             base.OnExit();
         }

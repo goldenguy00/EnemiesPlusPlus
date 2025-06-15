@@ -1,5 +1,5 @@
-﻿using System.Runtime.CompilerServices;
-using BepInEx.Configuration;
+﻿using BepInEx.Configuration;
+using MiscFixes.Modules;
 
 namespace EnemiesPlus
 {
@@ -31,197 +31,121 @@ namespace EnemiesPlus
         {
             PluginConfigFile = cfg;
 
-            var section = "Skills";
+            BindSkills("Skills");
+            BindTweaks("Tweaks");
+            BindBeetles("Beetles");
+        }
+
+        private static void BindSkills(string section)
+        {
             enableSkills = PluginConfigFile.BindOption(section,
                 "Enable New Skills",
+                "Allows any of the skills within this section to be toggled on and off.",
                 true,
-                "Allows any of the skills within this section to be toggled on and off.", true);
+                Extensions.ConfigFlags.RestartRequired);
 
             bellSkills = PluginConfigFile.BindOption(section,
                 "Enable Brass Contraptions Buff Beam Skill",
+                "Adds a new skill that gives an ally increased armor.",
                 true,
-                "Adds a new skill that gives an ally increased armor.", true);
+                Extensions.ConfigFlags.RestartRequired);
 
             impSkills = PluginConfigFile.BindOption(section,
                 "Enable Imps Void Spike Skill",
+                "Adds a new skill for Imps to throw void spikes at range, similarly to the Imp OverLord.",
                 true,
-                "Adds a new skill for Imps to throw void spikes at range, similarly to the Imp OverLord.", true);
+                Extensions.ConfigFlags.RestartRequired);
 
             lunarGolemSkills = PluginConfigFile.BindOption(section,
                 "Enable Lunar Golems Lunar Shell Skill",
+                "Adds a new ability that gives them some stuff idk its vanilla but unused",
                 true,
-                "Adds a new ability that gives them some stuff idk its vanilla but unused", true);
+                Extensions.ConfigFlags.RestartRequired);
 
-            wormTracking = PluginConfigFile.BindOption(section,
-                "Enable Worm Tracking Changes",
-                true,
-                "Changes Worms to have better targeting.", true);
             wormLeap = PluginConfigFile.BindOption(section,
                 "Enable Worms Leap Skill",
+                "Adds a new leap skill.",
                 true,
-                "Adds a new leap skill.", true);
+                Extensions.ConfigFlags.RestartRequired);
 
+        }
 
-            section = "Tweaks";
+        private static void BindTweaks(string section)
+        {
             enableTweaks = PluginConfigFile.BindOption(section,
                 "Enable Enemy Tweaks",
+                "Allows any of the skills within this section to be toggled on and off.",
                 true,
-                "Allows any of the skills within this section to be toggled on and off.", true);
+                Extensions.ConfigFlags.RestartRequired);
 
             helfireChanges = PluginConfigFile.BindOption(section,
                 "Enable Lunar Helfire Debuff",
+                "Enables Lunar enemies to apply the new Helfire debuff.",
                 true,
-                "Enables Lunar enemies to apply the new Helfire debuff.", true);
+                Extensions.ConfigFlags.RestartRequired);
 
             lunarWispChanges = PluginConfigFile.BindOption(section,
                 "Enable Lunar Wisp Changes",
+                "Increases Lunar Wisp movement speed and acceleration, orb applies helfire",
                 true,
-                "Increases Lunar Wisp movement speed and acceleration, orb applies helfire", true);
+                Extensions.ConfigFlags.RestartRequired);
 
             wispChanges = PluginConfigFile.BindOption(section,
                 "Enable Wisp Changes",
+                "Makes the wisp attack a fast projectile and increases Wisp bullet count",
                 true,
-                "Makes the wisp attack a fast projectile and increases Wisp bullet count", true);
+                Extensions.ConfigFlags.RestartRequired);
 
             greaterWispChanges = PluginConfigFile.BindOption(section,
                 "Enable Greater Wisp Changes",
+                "Decreases Greater Wisp credit cost",
                 true,
-                "Decreases Greater Wisp credit cost", true);
+                Extensions.ConfigFlags.RestartRequired);
 
             lemChanges = PluginConfigFile.BindOption(section,
                 "Enable Lemurian Bite Changes",
+                "Adds slight leap to Lemurian bite",
                 true,
-                "Adds slight leap to Lemurian bite", true);
+                Extensions.ConfigFlags.RestartRequired);
 
+            wormTracking = PluginConfigFile.BindOption(section,
+                "Enable Worm Tracking Changes",
+                "Changes Worms to have better targeting.",
+                true,
+                Extensions.ConfigFlags.RestartRequired);
 
-            section = "Beetles";
+        }
+        private static void BindBeetles(string section)
+        {
+
             enableBeetleFamilyChanges = PluginConfigFile.BindOption(section,
                 "Enable Beetle Family Changes",
+                "Enables all beetle related changes. Yes, they needed their own section. Unaffected by other config sections.",
                 true,
-                "Enables all beetle related changes. Yes, they needed their own section. Unaffected by other config sections.", true);
+                Extensions.ConfigFlags.RestartRequired);
 
             beetleBurrow = PluginConfigFile.BindOption(section,
                 "Enable Lil Beetle Burrow Skill",
+                "Adds a new projectile attack to beetles and adds a new mobility skill that allows beetles to burrow into the ground and reappear near the player.",
                 true,
-                "Adds a new projectile attack to beetles and adds a new mobility skill that allows beetles to burrow into the ground and reappear near the player.", true);
+                Extensions.ConfigFlags.RestartRequired);
             beetleSpit = PluginConfigFile.BindOption(section,
                 "Enable Lil Beetles Spit Skill",
+                "Adds a new projectile attack to beetles and adds a new mobility skill that allows beetles to burrow into the ground and reappear near the player.",
                 true,
-                "Adds a new projectile attack to beetles and adds a new mobility skill that allows beetles to burrow into the ground and reappear near the player.", true);
+                Extensions.ConfigFlags.RestartRequired);
 
             bgChanges = PluginConfigFile.BindOption(section,
                 "Enable Beetle Guards Rally Cry Skill",
+                "Adds a new skill that gives them and nearby allies increased attack speed and movement speed",
                 true,
-                "Adds a new skill that gives them and nearby allies increased attack speed and movement speed", true);
+                Extensions.ConfigFlags.RestartRequired);
 
             queenChanges = PluginConfigFile.BindOption(section,
                 "Enable Beetle Queens Debuff",
+                "Adds a new debuff, Beetle Juice, to Beetle Queen and ally beetles attacks and makes spit explode mid air",
                 true,
-                "Adds a new debuff, Beetle Juice, to Beetle Queen and ally beetles attacks and makes spit explode mid air", true);
+                Extensions.ConfigFlags.RestartRequired);
         }
-
-        #region Config Binding
-        public static ConfigEntry<T> BindOption<T>(this ConfigFile myConfig, string section, string name, T defaultValue, string description = "", bool restartRequired = false)
-        {
-            if (string.IsNullOrEmpty(description))
-                description = name;
-
-            if (restartRequired)
-                description += " (restart required)";
-
-            var configEntry = myConfig.Bind(section, name, defaultValue, description);
-
-            if (EnemiesPlusPlugin.RooInstalled)
-                TryRegisterOption(configEntry, restartRequired);
-
-            return configEntry;
-        }
-
-        public static ConfigEntry<T> BindOptionSlider<T>(this ConfigFile myConfig, string section, string name, T defaultValue, string description = "", float min = 0, float max = 20, bool restartRequired = false)
-        {
-            if (string.IsNullOrEmpty(description))
-                description = name;
-
-            description += " (Default: " + defaultValue + ")";
-
-            if (restartRequired)
-                description += " (restart required)";
-
-            var configEntry = myConfig.Bind(section, name, defaultValue, description);
-
-            if (EnemiesPlusPlugin.RooInstalled)
-                TryRegisterOptionSlider(configEntry, min, max, restartRequired);
-
-            return configEntry;
-        }
-        #endregion
-
-        #region RoO
-        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        public static void TryRegisterOption<T>(ConfigEntry<T> entry, bool restartRequired)
-        {
-            if (entry is ConfigEntry<string> stringEntry)
-            {
-                RiskOfOptions.ModSettingsManager.AddOption(new RiskOfOptions.Options.StringInputFieldOption(stringEntry, restartRequired));
-                return;
-            }
-            if (entry is ConfigEntry<float> floatEntry)
-            {
-                RiskOfOptions.ModSettingsManager.AddOption(new RiskOfOptions.Options.SliderOption(floatEntry, new RiskOfOptions.OptionConfigs.SliderConfig()
-                {
-                    min = 0,
-                    max = 20,
-                    FormatString = "{0:0.00}",
-                    restartRequired = restartRequired
-                }));
-                return;
-            }
-            if (entry is ConfigEntry<int> intEntry)
-            {
-                RiskOfOptions.ModSettingsManager.AddOption(new RiskOfOptions.Options.IntSliderOption(intEntry, restartRequired));
-                return;
-            }
-            if (entry is ConfigEntry<bool> boolEntry)
-            {
-                RiskOfOptions.ModSettingsManager.AddOption(new RiskOfOptions.Options.CheckBoxOption(boolEntry, restartRequired));
-                return;
-            }
-            if (entry is ConfigEntry<KeyboardShortcut> shortCutEntry)
-            {
-                RiskOfOptions.ModSettingsManager.AddOption(new RiskOfOptions.Options.KeyBindOption(shortCutEntry, restartRequired));
-                return;
-            }
-            if (typeof(T).IsEnum)
-            {
-                RiskOfOptions.ModSettingsManager.AddOption(new RiskOfOptions.Options.ChoiceOption(entry, restartRequired));
-                return;
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        public static void TryRegisterOptionSlider<T>(ConfigEntry<T> entry, float min, float max, bool restartRequired)
-        {
-            if (entry is ConfigEntry<int> intEntry)
-            {
-                RiskOfOptions.ModSettingsManager.AddOption(new RiskOfOptions.Options.IntSliderOption(intEntry, new RiskOfOptions.OptionConfigs.IntSliderConfig()
-                {
-                    min = (int)min,
-                    max = (int)max,
-                    formatString = "{0:0.00}",
-                    restartRequired = restartRequired
-                }));
-                return;
-            }
-
-            if (entry is ConfigEntry<float> floatEntry)
-                RiskOfOptions.ModSettingsManager.AddOption(new RiskOfOptions.Options.SliderOption(floatEntry, new RiskOfOptions.OptionConfigs.SliderConfig()
-                {
-                    min = min,
-                    max = max,
-                    FormatString = "{0:0.00}",
-                    restartRequired = restartRequired
-                }));
-        }
-        #endregion
     }
 }

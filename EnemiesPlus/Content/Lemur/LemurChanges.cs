@@ -1,5 +1,6 @@
 ﻿using UnityEngine.AddressableAssets;
 using RoR2.Skills;
+using RoR2.ContentManagement;
 
 namespace EnemiesPlus.Content.Lemur
 {
@@ -16,7 +17,6 @@ namespace EnemiesPlus.Content.Lemur
             LemBite.baseRechargeInterval = 1f;
         }
 
-
         private static void BiteLeap(On.EntityStates.LemurianMonster.Bite.orig_OnEnter orig, EntityStates.LemurianMonster.Bite self)
         {
             orig(self);
@@ -28,7 +28,7 @@ namespace EnemiesPlus.Content.Lemur
             if (magnitude > 0f)
                 leapDirection /= magnitude;
 
-            self.characterMotor.velocity = (leapDirection * self.characterBody.moveSpeed * 2f) with
+            self.characterMotor.velocity = (leapDirection * self.characterBody.moveSpeed) with
             {
                 y = self.characterBody.jumpPower * 0.25f
             };

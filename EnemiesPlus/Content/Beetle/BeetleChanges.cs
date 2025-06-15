@@ -8,6 +8,7 @@ using RoR2;
 using RoR2.CharacterAI;
 using RoR2.Projectile;
 using RoR2.Skills;
+using RoR2BepInExPack.GameAssetPaths;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
@@ -15,23 +16,23 @@ namespace EnemiesPlus.Content.Beetle
 {
     public class BeetleChanges
     {
-        public static GameObject beetleSpit;// = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleQueenSpit.prefab").WaitForCompletion().InstantiateClone("BeetleSpitProjectileScore");
-        public static GameObject beetleSpitGhost;// = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleQueenSpitGhost.prefab").WaitForCompletion().InstantiateClone("BeetleSpitProjectileGhostScore");
-        public static GameObject beetleSpitExplosion;// = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleSpitExplosion.prefab").WaitForCompletion().InstantiateClone("BeetleSpitExplosionScore");
-        public static GameObject burrowFX;// = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleGuardSunderPop.prefab").WaitForCompletion().InstantiateClone("BeetleBurrowEffectScore");
+        public static GameObject beetleSpit;// = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleQueenSpit_prefab").WaitForCompletion().InstantiateClone("BeetleSpitProjectileScore");
+        public static GameObject beetleSpitGhost;// = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleQueenSpitGhost_prefab").WaitForCompletion().InstantiateClone("BeetleSpitProjectileGhostScore");
+        public static GameObject beetleSpitExplosion;// = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleSpitExplosion_prefab").WaitForCompletion().InstantiateClone("BeetleSpitExplosionScore");
+        public static GameObject burrowFX;// = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleGuardSunderPop_prefab").WaitForCompletion().InstantiateClone("BeetleBurrowEffectScore");
         public static DamageAPI.ModdedDamageType beetleJuiceDT;
 
-        internal GameObject BeetleMaster => Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleMaster.prefab").WaitForCompletion();
-        internal GameObject BeetleBody => Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleBody.prefab").WaitForCompletion();
-        internal GameObject BeetleQueenSpit => Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleQueenSpit.prefab").WaitForCompletion();
-        internal GameObject BeetleQueenAcid => Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleQueenAcid.prefab").WaitForCompletion();
-        internal BuffDef BeetleJuice => Addressables.LoadAssetAsync<BuffDef>("RoR2/Base/Beetle/bdBeetleJuice.asset").WaitForCompletion();
-        internal GameObject BeetleGuardMaster => Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleGuardMaster.prefab").WaitForCompletion();
-        internal GameObject BeetleGuardBody => Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleGuardBody.prefab").WaitForCompletion();
-        internal SkillDef BGUtilitySkillDef => Addressables.LoadAssetAsync<SkillDef>("RoR2/Base/Beetle/BeetleGuardBodyDefenseUp.asset").WaitForCompletion();
-        internal SkillDef BeetlePrimary => Addressables.LoadAssetAsync<SkillDef>("RoR2/Base/Beetle/BeetleBodyHeadbutt.asset").WaitForCompletion();
-        internal SkillDef BeetleSecondary => Addressables.LoadAssetAsync<SkillDef>("RoR2/Base/Beetle/BeetleBodySleep.asset").WaitForCompletion();
-        internal EntityStateConfiguration BeetleSpawn => Addressables.LoadAssetAsync<EntityStateConfiguration>("RoR2/Base/Beetle/EntityStates.BeetleMonster.SpawnState.asset").WaitForCompletion();
+        internal GameObject BeetleMaster => Addressables.LoadAssetAsync<GameObject>(RoR2_Base_Beetle.BeetleMaster_prefab).WaitForCompletion();
+        internal GameObject BeetleBody => Addressables.LoadAssetAsync<GameObject>(RoR2_Base_Beetle.BeetleBody_prefab).WaitForCompletion();
+        internal GameObject BeetleQueenSpit => Addressables.LoadAssetAsync<GameObject>(RoR2_Base_BeetleQueen.BeetleQueenSpit_prefab).WaitForCompletion();
+        internal GameObject BeetleQueenAcid => Addressables.LoadAssetAsync<GameObject>(RoR2_Base_BeetleQueen.BeetleQueenAcid_prefab).WaitForCompletion();
+        internal BuffDef BeetleJuice => Addressables.LoadAssetAsync<BuffDef>(RoR2_Base_BeetleGroup.bdBeetleJuice_asset).WaitForCompletion();
+        internal GameObject BeetleGuardMaster => Addressables.LoadAssetAsync<GameObject>(RoR2_Base_BeetleGuard.BeetleGuardMaster_prefab).WaitForCompletion();
+        internal GameObject BeetleGuardBody => Addressables.LoadAssetAsync<GameObject>(RoR2_Base_BeetleGuard.BeetleGuardBody_prefab).WaitForCompletion();
+        internal SkillDef BGUtilitySkillDef => Addressables.LoadAssetAsync<SkillDef>(RoR2_Base_BeetleGuard.BeetleGuardBodyDefenseUp_asset).WaitForCompletion();
+        internal SkillDef BeetlePrimary => Addressables.LoadAssetAsync<SkillDef>(RoR2_Base_Beetle.BeetleBodyHeadbutt_asset).WaitForCompletion();
+        internal SkillDef BeetleSecondary => Addressables.LoadAssetAsync<SkillDef>(RoR2_Base_Beetle.BeetleBodySleep_asset).WaitForCompletion();
+        internal EntityStateConfiguration BeetleSpawn => Addressables.LoadAssetAsync<EntityStateConfiguration>(RoR2_Base_Beetle_EntityStates_BeetleMonster.SpawnState_asset).WaitForCompletion();
 
         public static BeetleChanges Instance { get; private set; }
 
@@ -39,9 +40,6 @@ namespace EnemiesPlus.Content.Beetle
 
         private BeetleChanges()
         {
-            GlobalEventManager.onServerDamageDealt += GlobalEventManager_onServerDamageDealt;
-            IL.RoR2.CharacterBody.RecalculateStats += CharacterBody_RecalculateStats;
-
             MakeJuice();
 
             if (EnemiesPlusConfig.beetleBurrow.Value || EnemiesPlusConfig.beetleSpit.Value)
@@ -52,6 +50,23 @@ namespace EnemiesPlus.Content.Beetle
 
             if (EnemiesPlusConfig.queenChanges.Value)
                 QueenChanges();
+        }
+
+        private void CharacterBody_AddTimedBuff_BuffDef_float(ILContext il)
+        {
+            var c = new ILCursor(il);
+
+            if (c.TryGotoNext(
+                    x => x.MatchLdsfld(AccessTools.Field(typeof(RoR2Content.Buffs), nameof(RoR2Content.Buffs.BeetleJuice)))
+                ))
+            {
+                if (c.TryGotoNext(
+                        x => x.MatchLdcI4(10)
+                    ))
+                {
+                    c.Next.Operand = 1;
+                }
+            }
         }
 
         private static void CharacterBody_RecalculateStats(ILContext il)
@@ -71,7 +86,7 @@ namespace EnemiesPlus.Content.Beetle
                 ))
             {
                 c.Index++;
-                c.Next.Operand = 0.01f;
+                c.Next.Operand = 0f;
             }
             else
                 Log.Error("ILHook failed for beetle juice CharacterBody.RecalculateStats");
@@ -85,15 +100,19 @@ namespace EnemiesPlus.Content.Beetle
 
         private void MakeJuice()
         {
+            GlobalEventManager.onServerDamageDealt += GlobalEventManager_onServerDamageDealt;
+            //IL.RoR2.CharacterBody.RecalculateStats += CharacterBody_RecalculateStats;
+            IL.RoR2.CharacterBody.AddTimedBuff_BuffDef_float += CharacterBody_AddTimedBuff_BuffDef_float;
+
             BeetleJuice.canStack = false;
             beetleJuiceDT = DamageAPI.ReserveDamageType();
 
-            beetleSpit = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleQueenSpit.prefab").WaitForCompletion().InstantiateClone("BeetleSpitProjectileScore");
+            beetleSpit = Addressables.LoadAssetAsync<GameObject>(RoR2_Base_BeetleQueen.BeetleQueenSpit_prefab).WaitForCompletion().InstantiateClone("BeetleSpitProjectileScore");
             beetleSpit.GetComponent<ProjectileSimple>().desiredForwardSpeed = 60f;
             beetleSpit.transform.localScale /= 2;
             beetleSpit.GetComponent<Rigidbody>().useGravity = true;
 
-            beetleSpitExplosion = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleSpitExplosion.prefab").WaitForCompletion().InstantiateClone("BeetleSpitExplosionScore", false);
+            beetleSpitExplosion = Addressables.LoadAssetAsync<GameObject>(RoR2_Base_BeetleQueen.BeetleSpitExplosion_prefab).WaitForCompletion().InstantiateClone("BeetleSpitExplosionScore", false);
             beetleSpitExplosion.transform.GetChild(0).localScale /= 2;
             foreach (Transform child in beetleSpitExplosion.transform.GetChild(0))
                 child.localScale /= 2;
@@ -105,7 +124,7 @@ namespace EnemiesPlus.Content.Beetle
             pie.fireChildren = false;
             pie.blastRadius = 2f;
 
-            beetleSpitGhost = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleQueenSpitGhost.prefab").WaitForCompletion().InstantiateClone("BeetleSpitProjectileGhostScore", false);
+            beetleSpitGhost = Addressables.LoadAssetAsync<GameObject>(RoR2_Base_BeetleQueen.BeetleQueenSpitGhost_prefab).WaitForCompletion().InstantiateClone("BeetleSpitProjectileGhostScore", false);
             beetleSpitGhost.transform.localScale /= 2;
             beetleSpitGhost.transform.GetChild(1).localScale /= 2;
             beetleSpitGhost.transform.GetChild(0).GetChild(0).localScale /= 2;
@@ -157,7 +176,7 @@ namespace EnemiesPlus.Content.Beetle
             (spit as ScriptableObject).name = "BeetleBodySpit";
             spit.activationState = ContentAddition.AddEntityState<BeetleSpit>(out _);
             spit.skillName = "BeetleSpit";
-            spit.baseRechargeInterval = 3f;
+            spit.baseRechargeInterval = 6f;
             spit.baseMaxStock = 1;
 
             var loc = BeetleBody.GetComponent<SkillLocator>();
@@ -169,7 +188,7 @@ namespace EnemiesPlus.Content.Beetle
             spitDriver.selectionRequiresAimTarget = true;
             spitDriver.selectionRequiresTargetLoS = true;
             spitDriver.minDistance = 5f;
-            spitDriver.maxDistance = 25f;
+            spitDriver.maxDistance = 15f;
             spitDriver.ignoreNodeGraph = true;
             spitDriver.shouldSprint = true;
             spitDriver.movementType = AISkillDriver.MovementType.ChaseMoveTarget;
@@ -213,8 +232,8 @@ namespace EnemiesPlus.Content.Beetle
             burrowTowardsTarget.customName = "BurrowTowardsTarget";
             burrowTowardsTarget.skillSlot = SkillSlot.Utility;
             burrowTowardsTarget.requireSkillReady = true;
-            burrowTowardsTarget.minDistance = 25f;
-            burrowTowardsTarget.maxDistance = 60f;
+            burrowTowardsTarget.minDistance = 50f;
+            burrowTowardsTarget.maxDistance = 100f;
             burrowTowardsTarget.selectionRequiresOnGround = true;
             burrowTowardsTarget.ignoreNodeGraph = true;
             burrowTowardsTarget.movementType = AISkillDriver.MovementType.ChaseMoveTarget;
@@ -225,7 +244,7 @@ namespace EnemiesPlus.Content.Beetle
             BeetleMaster.AddComponentCopy(oldfollow);
             Component.DestroyImmediate(oldfollow);
 
-            burrowFX = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleGuardSunderPop.prefab").WaitForCompletion().InstantiateClone("BeetleBurrowEffectScore", false);
+            burrowFX = Addressables.LoadAssetAsync<GameObject>(RoR2_Base_BeetleGuard.BeetleGuardSunderPop_prefab).WaitForCompletion().InstantiateClone("BeetleBurrowEffectScore", false);
             burrowFX.GetComponent<VFXAttributes>().vfxPriority = VFXAttributes.VFXPriority.Always;
             var dust = burrowFX.transform.Find("Particles/ParticleInitial/Dust");
             if (dust && dust.TryGetComponent(out ParticleSystemRenderer dustRenderer))
@@ -234,7 +253,7 @@ namespace EnemiesPlus.Content.Beetle
                 dustRenderer.sharedMaterial.SetColor("_TintColor", new Color32(201, 126, 44, 255));
             }
 
-            var decal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/BeetleGuardGroundSlam.prefab").WaitForCompletion().transform.Find("ParticleInitial/Decal");
+            var decal = Addressables.LoadAssetAsync<GameObject>(RoR2_Base_BeetleGuard.BeetleGuardGroundSlam_prefab).WaitForCompletion().transform.Find("ParticleInitial/Decal");
             if (decal)
             {
                 var burrowDecal = Object.Instantiate(decal.gameObject, burrowFX.transform);
