@@ -6,6 +6,7 @@ using R2API;
 using RoR2.Skills;
 using RoR2.CharacterAI;
 using EntityStates.Bell.BellWeapon;
+using MiscFixes.Modules;
 
 namespace EnemiesPlus.Content.Donger
 {

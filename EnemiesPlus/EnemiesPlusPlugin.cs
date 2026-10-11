@@ -20,14 +20,19 @@ using RoR2;
 namespace EnemiesPlus
 {
     [BepInDependency("com.rune580.riskofoptions", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency("com.bepis.r2api", BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency(R2API.ContentManagement.R2APIContentManager.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency(R2API.DamageAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency(R2API.DirectorAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency(R2API.DotAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency(R2API.PrefabAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency(R2API.RecalculateStatsAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
     public class EnemiesPlusPlugin : BaseUnityPlugin
     {
         public const string PluginGUID = $"com.{PluginAuthor}.{PluginName}";
         public const string PluginAuthor = "score";
         public const string PluginName = "EnemiesPlusPlus";
-        public const string PluginVersion = "1.1.0";
+        public const string PluginVersion = "1.2.0";
 
         public static EnemiesPlusPlugin Instance { get; private set; }
 

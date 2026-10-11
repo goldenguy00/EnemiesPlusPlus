@@ -1,5 +1,6 @@
 ﻿using EntityStates;
 using EntityStates.Wisp1Monster;
+using MiscFixes.Modules;
 using R2API;
 using RoR2;
 using RoR2.CharacterAI;
@@ -46,7 +47,10 @@ namespace EnemiesPlus.Content.Wisp
             WispGhostPrefab.transform.GetChild(0).transform.localScale = Vector3.one * 0.35f;
             WispGhostPrefab.transform.GetChild(0).GetComponent<ParticleSystemRenderer>().material = Addressables.LoadAssetAsync<Material>("RoR2/Base/Wisp/matWispEmber.mat").WaitForCompletion();
 
+            WispProjectile.GetComponent<ProjectileController>().ghostPrefabAddress = null;
+#pragma warning disable CS0618 // Type or member is obsolete
             WispProjectile.GetComponent<ProjectileController>().ghostPrefab = WispGhostPrefab;
+#pragma warning restore CS0618 // Type or member is obsolete
             WispProjectile.GetComponent<ProjectileSimple>().desiredForwardSpeed = 250f;
             if (WispProjectile.TryGetComponent<ProjectileSingleTargetImpact>(out var impact))
                 impact.impactEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Junk/Wisp/ImpactWispEmber.prefab").WaitForCompletion();

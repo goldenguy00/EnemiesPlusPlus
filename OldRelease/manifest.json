@@ -1,0 +1,9 @@
+﻿{
+	"name": "EnemiesPlusPlus",
+  "website_url": "https://thunderstore.io/c/riskofrain2/p/TechDebtCollector/EnemiesPlusPlus/",
+	"version_number": "1.1.1",
+	"description": "MOVED TO NEW MOD",
+  "dependencies": [
+    "TechDebtCollector-EnemiesPlusPlus-1.2.0"
+  ]
+}

@@ -43,8 +43,17 @@ namespace EnemiesPlus.Content.Beetle
         public override void OnExit()
         {
             TryCrossfade();
+
             if (NetworkServer.active)
-                Util.CleanseBody(characterBody, true, false, false, true, false, false);
+            {
+                CleanseSystem.CleanseBodyServer(characterBody,
+                    new CleanseSystem.CleanseArgs
+                    {
+                        characterBody = characterBody,
+                        removeDebuffs = true,
+                        removeDots = true
+                    });
+            }
             base.OnExit();
         }
 

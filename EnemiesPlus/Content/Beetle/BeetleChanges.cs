@@ -1,14 +1,14 @@
 ﻿using System.Linq;
 using EntityStates.BeetleMonster;
 using HarmonyLib;
-using Inferno.Stat_AI;
+using MiscFixes.Modules;
 using MonoMod.Cil;
 using R2API;
 using RoR2;
 using RoR2.CharacterAI;
 using RoR2.Projectile;
 using RoR2.Skills;
-using RoR2BepInExPack.GameAssetPaths;
+using RoR2BepInExPack.GameAssetPathsBetter;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
@@ -32,7 +32,7 @@ namespace EnemiesPlus.Content.Beetle
         internal SkillDef BGUtilitySkillDef => Addressables.LoadAssetAsync<SkillDef>(RoR2_Base_BeetleGuard.BeetleGuardBodyDefenseUp_asset).WaitForCompletion();
         internal SkillDef BeetlePrimary => Addressables.LoadAssetAsync<SkillDef>(RoR2_Base_Beetle.BeetleBodyHeadbutt_asset).WaitForCompletion();
         internal SkillDef BeetleSecondary => Addressables.LoadAssetAsync<SkillDef>(RoR2_Base_Beetle.BeetleBodySleep_asset).WaitForCompletion();
-        internal EntityStateConfiguration BeetleSpawn => Addressables.LoadAssetAsync<EntityStateConfiguration>(RoR2_Base_Beetle_EntityStates_BeetleMonster.SpawnState_asset).WaitForCompletion();
+        internal EntityStateConfiguration BeetleSpawn => Addressables.LoadAssetAsync<EntityStateConfiguration>(RoR2_Base_Beetle.EntityStates_BeetleMonster_SpawnState_asset).WaitForCompletion();
 
         public static BeetleChanges Instance { get; private set; }
 
@@ -130,7 +130,10 @@ namespace EnemiesPlus.Content.Beetle
             beetleSpitGhost.transform.GetChild(0).GetChild(0).localScale /= 2;
             beetleSpitGhost.transform.GetChild(1).GetChild(0).localScale /= 2;
             beetleSpitGhost.transform.GetChild(1).GetChild(1).localScale /= 2;
+            beetleSpit.GetComponent<ProjectileController>().ghostPrefabAddress = null;
+#pragma warning disable CS0618 // Type or member is obsolete
             beetleSpit.GetComponent<ProjectileController>().ghostPrefab = beetleSpitGhost;
+#pragma warning restore CS0618 // Type or member is obsolete
 
 
             ContentAddition.AddEffect(beetleSpitExplosion);
@@ -141,7 +144,6 @@ namespace EnemiesPlus.Content.Beetle
         private void LilGuyChanges()
         {
             BeetleSpawn.TryModifyFieldValue(nameof(SpawnState.duration), 3.5f);
-            BeetleBody.GetComponent<CharacterBody>().baseMoveSpeed = 7f;
 
             if (EnemiesPlusConfig.beetleSpit.Value)
                 MakeSpit();
@@ -172,7 +174,7 @@ namespace EnemiesPlus.Content.Beetle
         }
         private void MakeSpit()
         {
-            var spit = BeetleSecondary.GetCopyOf(BeetlePrimary);
+            var spit = BeetleSecondary.CloneFrom(BeetlePrimary);
             (spit as ScriptableObject).name = "BeetleBodySpit";
             spit.activationState = ContentAddition.AddEntityState<BeetleSpit>(out _);
             spit.skillName = "BeetleSpit";
@@ -241,7 +243,7 @@ namespace EnemiesPlus.Content.Beetle
             burrowTowardsTarget.aimType = AISkillDriver.AimType.AtMoveTarget;
             burrowTowardsTarget.resetCurrentEnemyOnNextDriverSelection = true;
 
-            BeetleMaster.AddComponentCopy(oldfollow);
+            BeetleMaster.CloneComponent(oldfollow);
             Component.DestroyImmediate(oldfollow);
 
             burrowFX = Addressables.LoadAssetAsync<GameObject>(RoR2_Base_BeetleGuard.BeetleGuardSunderPop_prefab).WaitForCompletion().InstantiateClone("BeetleBurrowEffectScore", false);

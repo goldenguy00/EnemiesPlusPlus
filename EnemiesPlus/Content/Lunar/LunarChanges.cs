@@ -1,14 +1,14 @@
-﻿using R2API;
-using UnityEngine.AddressableAssets;
-using UnityEngine;
-using RoR2;
-using EntityStates;
-using System.Linq;
-using RoR2.CharacterAI;
-using EntityStates.LunarWisp;
-using RoR2.Skills;
+﻿using System.Linq;
 using EntityStates.LunarGolem;
+using EntityStates.LunarWisp;
+using MiscFixes.Modules;
+using R2API;
+using RoR2;
+using RoR2.CharacterAI;
 using RoR2.Projectile;
+using RoR2.Skills;
+using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 namespace EnemiesPlus.Content.Lunar
 {
@@ -155,7 +155,9 @@ namespace EnemiesPlus.Content.Lunar
         {
             LunarShell.TryModifyFieldValue(nameof(Shell.buffDuration), 12f);
             LunarGolemShield.baseRechargeInterval = 30f;
-            LunarGolemMaster.GetComponents<AISkillDriver>().Where(driver => driver.customName == "StrafeAndShoot").First().requireSkillReady = true;
+            var strafeDriver = LunarGolemMaster.GetComponents<AISkillDriver>().FirstOrDefault(driver => driver.customName == "StrafeAndShoot");
+            if (strafeDriver)
+                strafeDriver.requireSkillReady = true;
 
             var lunarShellDriver = LunarGolemMaster.AddComponent<AISkillDriver>();
             lunarShellDriver.customName = "LunarShell";
@@ -180,7 +182,18 @@ namespace EnemiesPlus.Content.Lunar
             {
                 if (Util.CheckRoll(25f * damageReport.damageInfo.procCoefficient, damageReport.attackerMaster))
                 {
-                    DotController.InflictDot(damageReport.victim.gameObject, damageReport.attacker, helfireDotIdx, 6f, 1f, 3);
+                    var inflictDotInfo = new InflictDotInfo
+                    {
+                        victimObject = damageReport.victim.gameObject,
+                        attackerObject = damageReport.attacker,
+                        dotIndex = helfireDotIdx,
+                        duration = 6f,
+                        damageMultiplier = 1f,
+                        maxStacksFromAttacker = 3,
+                        hitHurtBox = damageReport.damageInfo.inflictedHurtbox,
+                        procChainMask = damageReport.damageInfo.procChainMask
+                    };
+                    DotController.InflictDot(ref inflictDotInfo);
                     damageReport.victimBody.AddTimedBuff(RoR2Content.Buffs.HealingDisabled, 6f);
                 }
             }

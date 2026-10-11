@@ -1,5 +1,8 @@
-﻿using BepInEx.Configuration;
+﻿using System.Runtime.CompilerServices;
+using System;
+using BepInEx.Configuration;
 using MiscFixes.Modules;
+using UnityEngine;
 
 namespace EnemiesPlus
 {
@@ -30,6 +33,8 @@ namespace EnemiesPlus
         public static void Init(ConfigFile cfg)
         {
             PluginConfigFile = cfg;
+            if (EnemiesPlusPlugin.RooInstalled)
+                InitRoO();
 
             BindSkills("Skills");
             BindTweaks("Tweaks");
@@ -146,6 +151,25 @@ namespace EnemiesPlus
                 "Adds a new debuff, Beetle Juice, to Beetle Queen and ally beetles attacks and makes spit explode mid air",
                 true,
                 Extensions.ConfigFlags.RestartRequired);
+        }
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public static void InitRoO()
+        {
+            try
+            {
+                RiskOfOptions.ModSettingsManager.SetModDescription("Enemies but good.", EnemiesPlusPlugin.PluginGUID, EnemiesPlusPlugin.PluginName);
+
+                var iconStream = System.IO.File.ReadAllBytes(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(EnemiesPlusPlugin.Instance.Info.Location), "icon.png"));
+                var tex = new Texture2D(256, 256);
+                tex.LoadImage(iconStream);
+                var icon = Sprite.Create(tex, new Rect(0, 0, 256, 256), new Vector2(0.5f, 0.5f));
+
+                RiskOfOptions.ModSettingsManager.SetModIcon(icon);
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.ToString());
+            }
         }
     }
 }

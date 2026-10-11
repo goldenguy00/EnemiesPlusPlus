@@ -82,8 +82,11 @@ namespace EnemiesPlus.Content.Worm
                     {
                         foreach (var ai in body.master.aiComponents)
                         {
-                            if (ai && ai.currentEnemy?.unset == false && ai.currentEnemy.hasLoS)
-                                ai.currentEnemy.GetBullseyePosition(out pos);
+                            if (!ai || ai.currentEnemy == null)
+                                continue;
+
+                            if (ai.currentEnemy.TestLOSNow() && ai.currentEnemy.GetBullseyePosition(out var newPos))
+                                return newPos;
                         }
                     }
                     return pos;
@@ -100,8 +103,11 @@ namespace EnemiesPlus.Content.Worm
             {
                 foreach (var ai in master.aiComponents)
                 {
-                    if (ai && ai.currentEnemy?.gameObject)
-                        self.wormBodyPositionsDriver.referenceTransform = ai.currentEnemy.gameObject.transform;
+                    if (!ai || ai.currentEnemy == null)
+                        continue;
+
+                    if (ai.currentEnemy.TestLOSNow())
+                        self.wormBodyPositionsDriver.referenceTransform = ai.currentEnemy.bestHurtBox.transform;
                 }
             }
         }
