@@ -9,7 +9,7 @@ namespace EnemiesPlus.Content.Beetle
 {
     public class RallyCry : BaseState
     {
-        public static float baseDuration = 3.5f;
+        public static float baseDuration = 2.5f;
         public static float buffDuration = 8f;
         private float delay;
         private float duration;

@@ -168,7 +168,7 @@ namespace EnemiesPlus.Content.Lunar
             lunarShellDriver.moveTargetType = AISkillDriver.TargetType.CurrentEnemy;
             lunarShellDriver.movementType = AISkillDriver.MovementType.ChaseMoveTarget;
 
-            LunarGolemMaster.ReorderSkillDrivers(0);
+            LunarGolemMaster.ReorderLastSkillDriver(0);
         }
         #endregion
 

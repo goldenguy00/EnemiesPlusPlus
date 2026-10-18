@@ -1,13 +1,18 @@
 ﻿using System;
-using UnityEngine.AddressableAssets;
-using UnityEngine;
-using HG;
 using System.Linq;
-using RoR2;
+using EnemiesPlus.Content.Beetle;
 using EntityStates;
-using RoR2.CharacterAI;
-using MonoMod.Cil;
+using HG;
+using MiscFixes.Modules;
 using Mono.Cecil.Cil;
+using MonoMod.Cil;
+using R2API;
+using RoR2;
+using RoR2.CharacterAI;
+using RoR2.Skills;
+using RoR2BepInExPack.GameAssetPathsBetter;
+using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 namespace EnemiesPlus.Content.Worm
 {
@@ -17,6 +22,7 @@ namespace EnemiesPlus.Content.Worm
         internal GameObject ElectricWorm => Addressables.LoadAssetAsync<GameObject>("RoR2/Base/ElectricWorm/ElectricWormBody.prefab").WaitForCompletion();
         internal GameObject MagmaWormMaster => Addressables.LoadAssetAsync<GameObject>("RoR2/Base/MagmaWorm/MagmaWormMaster.prefab").WaitForCompletion();
         internal GameObject ElectricWormMaster => Addressables.LoadAssetAsync<GameObject>("RoR2/Base/ElectricWorm/ElectricWormMaster.prefab").WaitForCompletion();
+        internal SkillDef WormBlinkSkillDef => Addressables.LoadAssetAsync<SkillDef>(RoR2_Base_MagmaWorm.MagmaWormBodyBlink_asset).WaitForCompletion();
 
         public static WormChanges Instance { get; private set; }
 
@@ -34,34 +40,45 @@ namespace EnemiesPlus.Content.Worm
 
             if (EnemiesPlusConfig.wormLeap.Value)
             {
-                MagmaWormMaster.ReorderSkillDrivers(1);
-
-                var magmaWormPS = MagmaWorm.GetComponent<ModelLocator>().modelTransform.gameObject.GetComponentsInChildren<ParticleSystem>();
+                var worm = MagmaWorm;
+                var master = MagmaWormMaster;
+                var magmaWormPS = worm.GetComponent<ModelLocator>().modelTransform.gameObject.GetComponentsInChildren<ParticleSystem>();
                 foreach (var ps in magmaWormPS)
                 {
                     var main = ps.main;
                     main.startSizeMultiplier *= 2f;
                 }
 
-                var magmaWormUtilityDef = MagmaWorm.GetComponent<SkillLocator>().utility.skillFamily.variants[0].skillDef;
-                magmaWormUtilityDef.activationState = new SerializableEntityStateType(typeof(EntityStates.MagmaWorm.Leap));
-                magmaWormUtilityDef.baseRechargeInterval = 60f;
-                magmaWormUtilityDef.activationStateMachineName = "Weapon";
+                var leapDef = ScriptableObject.CreateInstance<SkillDef>().CloneFrom(WormBlinkSkillDef);
+                leapDef.activationState = ContentAddition.AddEntityState<EntityStates.MagmaWorm.Leap>(out _);
+                leapDef.baseRechargeInterval = 60f;
+                leapDef.activationStateMachineName = "Weapon";
+                leapDef.skillName = "WormBodyLeap";
+                leapDef.skillNameToken = "WormBodyLeap";
+                (leapDef as ScriptableObject).name = "WormBodyLeapSkillDef";
 
-                foreach (var driver in MagmaWormMaster.GetComponents<AISkillDriver>())
+                var leapDriver = master.CloneComponent(master.GetComponents<AISkillDriver>().Last());
+                leapDriver.customName = "Leap";
+                leapDriver.minDistance = 0f;
+                leapDriver.aimType = AISkillDriver.AimType.AtMoveTarget;
+                leapDriver.shouldSprint = true;
+                leapDriver.requireSkillReady = true;
+                leapDriver.skillSlot = SkillSlot.Secondary;
+                leapDriver.driverUpdateTimerOverride = 5f;
+                master.ReorderSkillDrivers(leapDriver, 1);
+
+                var skillLoc = worm.GetComponent<SkillLocator>();
+                if (skillLoc.secondary == null)
                 {
-                    switch (driver.customName)
-                    {
-                        case "Blink":
-                            driver.shouldSprint = true;
-                            driver.minDistance = 0f;
-                            driver.aimType = AISkillDriver.AimType.AtMoveTarget;
-                            break;
-                        default:
-                            driver.skillSlot = SkillSlot.None;
-                            break;
-                    }
+                    skillLoc.secondary = worm.AddComponent<GenericSkill>();
+                    skillLoc.secondary.skillName = "WormBodyLeapSkill";
                 }
+
+                var secondaryFamily = ScriptableObject.CreateInstance<SkillFamily>();
+                (secondaryFamily as ScriptableObject).name = "WormBodyLeapFamily";
+                secondaryFamily.variants = [new SkillFamily.Variant { skillDef = leapDef}];
+                skillLoc.secondary._skillFamily = secondaryFamily;
+                ContentAddition.AddSkillFamily(secondaryFamily);
             }
         }
 

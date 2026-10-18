@@ -73,7 +73,7 @@ namespace EnemiesPlus.Content.Donger
             buffBeamDriver.aimType = AISkillDriver.AimType.AtMoveTarget;
             buffBeamDriver.maxDistance = 75f;
 
-            BellMaster.ReorderSkillDrivers(1);
+            BellMaster.ReorderLastSkillDriver(1);
         }
     }
 }

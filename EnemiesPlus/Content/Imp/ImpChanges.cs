@@ -41,7 +41,7 @@ namespace EnemiesPlus.Content.Imp
             spikeDriver.aimType = AISkillDriver.AimType.AtCurrentEnemy;
             spikeDriver.moveTargetType = AISkillDriver.TargetType.CurrentEnemy;
 
-            ImpMaster.ReorderSkillDrivers(2);
+            ImpMaster.ReorderLastSkillDriver(2);
         }
 
         private void CreateSpikeSkillFamily()

@@ -10,7 +10,7 @@ namespace EnemiesPlus
 {
     public static class Utils
     {
-        public static void ReorderSkillDrivers(this GameObject master, int targetIdx)
+        public static void ReorderLastSkillDriver(this GameObject master, int targetIdx)
         {
             var c = master.GetComponents<AISkillDriver>();
             master.ReorderSkillDrivers(c, c.Length - 1, targetIdx);

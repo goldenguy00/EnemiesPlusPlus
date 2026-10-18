@@ -32,7 +32,7 @@ namespace EnemiesPlus
         public const string PluginGUID = $"com.{PluginAuthor}.{PluginName}";
         public const string PluginAuthor = "score";
         public const string PluginName = "EnemiesPlusPlus";
-        public const string PluginVersion = "1.2.0";
+        public const string PluginVersion = "1.2.1";
 
         public static EnemiesPlusPlugin Instance { get; private set; }
 
