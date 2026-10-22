@@ -16,6 +16,7 @@ namespace EnemiesPlus
         public static ConfigEntry<bool> lunarGolemSkills;
 
         public static ConfigEntry<bool> enableTweaks;
+        public static ConfigEntry<bool> gupChanges;
         public static ConfigEntry<bool> lemChanges;
         public static ConfigEntry<bool> wispChanges;
         public static ConfigEntry<bool> greaterWispChanges;
@@ -28,6 +29,8 @@ namespace EnemiesPlus
         public static ConfigEntry<bool> bgChanges;
         public static ConfigEntry<bool> queenChanges;
 
+        public static ConfigEntry<bool> compatChanges;
+
         private static ConfigFile PluginConfigFile { get; set; }
 
         public static void Init(ConfigFile cfg)
@@ -39,6 +42,16 @@ namespace EnemiesPlus
             BindSkills("Skills");
             BindTweaks("Tweaks");
             BindBeetles("Beetles");
+            BindCompat("Compat");
+        }
+
+        private static void BindCompat(string section)
+        {
+            compatChanges = PluginConfigFile.BindOption(section,
+                "Enable RiftTitans Compatibility",
+                "Adjusts the enemies from this mod to feel more fair",
+                true,
+                Extensions.ConfigFlags.RestartRequired);
         }
 
         private static void BindSkills(string section)
@@ -80,6 +93,12 @@ namespace EnemiesPlus
             enableTweaks = PluginConfigFile.BindOption(section,
                 "Enable Enemy Tweaks",
                 "Allows any of the skills within this section to be toggled on and off.",
+                true,
+                Extensions.ConfigFlags.RestartRequired);
+
+            gupChanges = PluginConfigFile.BindOption(section,
+                "Enable Gup Changes",
+                "Makes gups have more accurate visual queues",
                 true,
                 Extensions.ConfigFlags.RestartRequired);
 

@@ -14,6 +14,7 @@ namespace EnemiesPlus.Content.Beetle
         private bool hasFired;
         private float duration;
         private float fireTime;
+        private bool hasScreamed;
 
         public override void OnEnter()
         {
@@ -26,7 +27,6 @@ namespace EnemiesPlus.Content.Beetle
             if (this.characterMotor)
                 this.characterMotor.walkSpeedPenaltyCoefficient = 0f;
 
-            Util.PlayAttackSpeedSound(attackSoundString, this.gameObject, this.duration - this.fireTime);
             this.PlayCrossfade("Body", "EmoteSurprise", "Headbutt.playbackRate", this.duration, 0.1f);
         }
 
@@ -36,7 +36,6 @@ namespace EnemiesPlus.Content.Beetle
             {
                 hasFired = true;
                 var aimRay = GetAimRay();
-                Util.PlayAttackSpeedSound(attackSoundString, this.gameObject, this.duration - this.fireTime);
                 if (base.isAuthority)
                 {
                     ProjectileManager.instance.FireProjectile(projectilePrefab, aimRay.origin, Util.QuaternionSafeLookRotation(aimRay.direction), this.gameObject, this.damageStat, 0f, base.RollCrit());
@@ -47,6 +46,12 @@ namespace EnemiesPlus.Content.Beetle
         public override void FixedUpdate()
         {
             base.FixedUpdate();
+            if (hasScreamed == false && fixedAge > fireTime * 0.85f)
+            {
+                hasScreamed = true;
+                Util.PlayAttackSpeedSound(attackSoundString, this.gameObject, 3f);
+            }
+
             if (base.fixedAge >= fireTime)
             {
                 Fire();
@@ -61,6 +66,7 @@ namespace EnemiesPlus.Content.Beetle
         public override void OnExit()
         {
             base.OnExit();
+
             if (this.characterMotor)
                 this.characterMotor.walkSpeedPenaltyCoefficient = 1f;
         }

@@ -10,7 +10,7 @@ using MiscFixes.Modules;
 
 namespace EnemiesPlus.Content.Donger
 {
-    internal class BellChanges
+    public class BellChanges
     {
         internal GameObject BellMaster => Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Bell/BellMaster.prefab").WaitForCompletion();
         internal GameObject BellBody => Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Bell/BellBody.prefab").WaitForCompletion();

@@ -1,16 +1,15 @@
-using System.Runtime.CompilerServices;
 using System.Security;
 using System.Security.Permissions;
 using BepInEx;
 using BepInEx.Bootstrap;
 using EnemiesPlus.Content.Beetle;
 using EnemiesPlus.Content.Donger;
+using EnemiesPlus.Content.Gup;
 using EnemiesPlus.Content.Imp;
 using EnemiesPlus.Content.Lemur;
 using EnemiesPlus.Content.Lunar;
 using EnemiesPlus.Content.Wisp;
 using EnemiesPlus.Content.Worm;
-using RoR2;
 
 [module: UnverifiableCode]
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -20,6 +19,7 @@ using RoR2;
 namespace EnemiesPlus
 {
     [BepInDependency("com.rune580.riskofoptions", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("com.phreel.TitansOfTheRiftSOTV", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(R2API.ContentManagement.R2APIContentManager.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(R2API.DamageAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(R2API.DirectorAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
@@ -32,7 +32,7 @@ namespace EnemiesPlus
         public const string PluginGUID = $"com.{PluginAuthor}.{PluginName}";
         public const string PluginAuthor = "score";
         public const string PluginName = "EnemiesPlusPlus";
-        public const string PluginVersion = "1.2.1";
+        public const string PluginVersion = "1.2.2";
 
         public static EnemiesPlusPlugin Instance { get; private set; }
 
@@ -45,7 +45,6 @@ namespace EnemiesPlus
 
             Log.Init(Logger);
             EnemiesPlusConfig.Init(Config);
-            HarmonyHooks.Init();
 
             if (EnemiesPlusConfig.enableSkills.Value)
             {
@@ -57,6 +56,7 @@ namespace EnemiesPlus
 
             if (EnemiesPlusConfig.enableTweaks.Value)
             {
+                if (EnemiesPlusConfig.gupChanges.Value) GupChanges.Init();
                 if (EnemiesPlusConfig.lemChanges.Value) LemurChanges.Init();
                 if (EnemiesPlusConfig.wispChanges.Value || EnemiesPlusConfig.greaterWispChanges.Value) WispChanges.Init();
                 if (EnemiesPlusConfig.helfireChanges.Value || EnemiesPlusConfig.lunarWispChanges.Value) LunarChanges.Init();
@@ -64,6 +64,9 @@ namespace EnemiesPlus
 
             if (EnemiesPlusConfig.enableBeetleFamilyChanges.Value)
                 BeetleChanges.Init();
+
+            if (EnemiesPlusConfig.compatChanges.Value)
+                HarmonyHooks.Init();
         }
     }
 }

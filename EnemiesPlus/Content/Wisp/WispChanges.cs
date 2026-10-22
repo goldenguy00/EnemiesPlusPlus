@@ -1,5 +1,4 @@
-﻿using EntityStates;
-using EntityStates.Wisp1Monster;
+﻿using EntityStates.Wisp1Monster;
 using MiscFixes.Modules;
 using R2API;
 using RoR2;
@@ -10,7 +9,7 @@ using UnityEngine.AddressableAssets;
 
 namespace EnemiesPlus.Content.Wisp
 {
-    internal class WispChanges
+    public class WispChanges
     {
         public static GameObject WispProjectile, WispGhostPrefab;
         internal SpawnCard GreaterWispCard => Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/GreaterWisp/cscGreaterWisp.asset").WaitForCompletion();

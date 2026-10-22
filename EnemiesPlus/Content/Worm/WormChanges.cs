@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Linq;
-using EnemiesPlus.Content.Beetle;
-using EntityStates;
-using HG;
 using MiscFixes.Modules;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
@@ -16,7 +13,7 @@ using UnityEngine.AddressableAssets;
 
 namespace EnemiesPlus.Content.Worm
 {
-    internal class WormChanges
+    public class WormChanges
     {
         internal GameObject MagmaWorm => Addressables.LoadAssetAsync<GameObject>("RoR2/Base/MagmaWorm/MagmaWormBody.prefab").WaitForCompletion();
         internal GameObject ElectricWorm => Addressables.LoadAssetAsync<GameObject>("RoR2/Base/ElectricWorm/ElectricWormBody.prefab").WaitForCompletion();

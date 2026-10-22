@@ -1,8 +1,5 @@
 ﻿using System.Linq;
-using System.Reflection;
-using HG.GeneralSerializer;
 using MiscFixes.Modules;
-using RoR2;
 using RoR2.CharacterAI;
 using UnityEngine;
 

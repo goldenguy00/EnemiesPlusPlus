@@ -12,7 +12,7 @@ using UnityEngine.AddressableAssets;
 
 namespace EnemiesPlus.Content.Lunar
 {
-    internal class LunarChanges
+    public class LunarChanges
     {
         public static GameObject lunarWispTrackingBomb;// = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarWisp/LunarWispTrackingBomb.prefab").WaitForCompletion().InstantiateClone("LunarWispOrbScore");
         public static BuffDef helfireDebuff;

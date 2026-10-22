@@ -3,7 +3,6 @@ using UnityEngine;
 using UnityEngine.Networking;
 using EntityStates;
 using EntityStates.BeetleGuardMonster;
-using System.Linq;
 
 namespace EnemiesPlus.Content.Beetle
 {

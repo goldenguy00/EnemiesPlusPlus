@@ -1,10 +1,9 @@
 ﻿using UnityEngine.AddressableAssets;
 using RoR2.Skills;
-using RoR2.ContentManagement;
 
 namespace EnemiesPlus.Content.Lemur
 {
-    internal class LemurChanges
+    public class LemurChanges
     {
         private SkillDef LemBite => Addressables.LoadAssetAsync<SkillDef>("RoR2/Base/Lemurian/LemurianBodyBite.asset").WaitForCompletion();
 
